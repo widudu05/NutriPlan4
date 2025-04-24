@@ -4,6 +4,72 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+# Tabelas para a funcionalidade TACO (Tabela Brasileira de Composição de Alimentos)
+class FoodCategory(db.Model):
+    """Modelo para categorias de alimentos da tabela TACO"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    foods = db.relationship('Food', backref='category', lazy=True)
+    
+    def __repr__(self):
+        return f'<FoodCategory {self.name}>'
+
+class Food(db.Model):
+    """Modelo para alimentos da tabela TACO"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    taco_id = db.Column(db.String(20), nullable=True)  # ID original na tabela TACO
+    category_id = db.Column(db.Integer, db.ForeignKey('food_category.id'), nullable=False)
+    
+    # Informações nutricionais básicas
+    calories = db.Column(db.Float, nullable=False, default=0)  # kcal
+    proteins = db.Column(db.Float, nullable=False, default=0)  # g
+    carbs = db.Column(db.Float, nullable=False, default=0)     # g
+    fats = db.Column(db.Float, nullable=False, default=0)      # g
+    fiber = db.Column(db.Float, nullable=True, default=0)      # g
+    
+    # Informações nutricionais adicionais
+    sodium = db.Column(db.Float, nullable=True)                # mg
+    calcium = db.Column(db.Float, nullable=True)               # mg
+    iron = db.Column(db.Float, nullable=True)                  # mg
+    cholesterol = db.Column(db.Float, nullable=True)           # mg
+    
+    # Relações com o plano alimentar
+    meal_items = db.relationship('MealItem', backref='food', lazy=True)
+    
+    def __repr__(self):
+        return f'<Food {self.name}>'
+
+class MealItem(db.Model):
+    """Modelo para itens de refeição (relaciona alimentos com refeições)"""
+    id = db.Column(db.Integer, primary_key=True)
+    quantity = db.Column(db.Float, nullable=False)  # quantidade em gramas
+    food_id = db.Column(db.Integer, db.ForeignKey('food.id'), nullable=False)
+    meal_id = db.Column(db.Integer, db.ForeignKey('meal.id'), nullable=False)
+    
+    # Valores calculados com base na quantidade
+    calories = db.Column(db.Float, nullable=True)  # kcal
+    proteins = db.Column(db.Float, nullable=True)  # g
+    carbs = db.Column(db.Float, nullable=True)     # g
+    fats = db.Column(db.Float, nullable=True)      # g
+    
+    def __repr__(self):
+        return f'<MealItem {self.quantity}g>'
+    
+    @property
+    def calculate_nutrients(self):
+        """Calcula os nutrientes com base na quantidade"""
+        if not self.food:
+            return
+            
+        # Converter g para 100g (valores da tabela TACO são por 100g)
+        factor = self.quantity / 100
+        
+        self.calories = round(self.food.calories * factor, 2)
+        self.proteins = round(self.food.proteins * factor, 2)
+        self.carbs = round(self.food.carbs * factor, 2)
+        self.fats = round(self.food.fats * factor, 2)
+
 class User(db.Model):
     """Modelo para usuários do sistema (nutricionistas)"""
     id = db.Column(db.Integer, primary_key=True)
@@ -107,6 +173,9 @@ class MealPlan(db.Model):
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)
     total_calories = db.Column(db.Integer, nullable=True)
+    total_proteins = db.Column(db.Float, nullable=True)
+    total_carbs = db.Column(db.Float, nullable=True)
+    total_fats = db.Column(db.Float, nullable=True)
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
@@ -114,21 +183,56 @@ class MealPlan(db.Model):
     
     def __repr__(self):
         return f'<MealPlan {self.title}>'
+    
+    def calculate_totals(self):
+        """Calcula o total de calorias e macronutrientes de todas as refeições do plano"""
+        # Primeiro calcula os totais de cada refeição
+        for meal in self.meals:
+            meal.calculate_totals()
+        
+        # Depois soma os totais
+        self.total_calories = sum(meal.calories or 0 for meal in self.meals)
+        self.total_proteins = sum(meal.proteins or 0 for meal in self.meals)
+        self.total_carbs = sum(meal.carbs or 0 for meal in self.meals)
+        self.total_fats = sum(meal.fats or 0 for meal in self.meals)
+        
+        return {
+            'calories': self.total_calories,
+            'proteins': self.total_proteins,
+            'carbs': self.total_carbs,
+            'fats': self.total_fats
+        }
 
 class Meal(db.Model):
     """Modelo para refeições dentro do plano alimentar"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)  # Café da manhã, Almoço, etc.
     time = db.Column(db.String(10), nullable=True)   # Horário sugerido
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text, nullable=True)  # Descrição geral da refeição
     calories = db.Column(db.Integer, nullable=True)
     proteins = db.Column(db.Float, nullable=True)    # gramas
     carbs = db.Column(db.Float, nullable=True)       # gramas
     fats = db.Column(db.Float, nullable=True)        # gramas
     meal_plan_id = db.Column(db.Integer, db.ForeignKey('meal_plan.id'), nullable=False)
     
+    # Relação com os itens de alimentos da refeição
+    meal_items = db.relationship('MealItem', backref='meal', lazy=True, cascade="all, delete-orphan")
+    
     def __repr__(self):
         return f'<Meal {self.name}>'
+    
+    def calculate_totals(self):
+        """Calcula o total de calorias e macronutrientes de todos os itens da refeição"""
+        self.calories = sum(item.calories or 0 for item in self.meal_items)
+        self.proteins = sum(item.proteins or 0 for item in self.meal_items)
+        self.carbs = sum(item.carbs or 0 for item in self.meal_items)
+        self.fats = sum(item.fats or 0 for item in self.meal_items)
+        return {
+            'calories': self.calories,
+            'proteins': self.proteins,
+            'carbs': self.carbs,
+            'fats': self.fats
+        }
 
 class Consultation(db.Model):
     """Modelo para consultas nutricionais"""

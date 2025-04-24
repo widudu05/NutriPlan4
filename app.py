@@ -2,6 +2,7 @@ from flask import Flask, send_from_directory
 from markupsafe import Markup
 from models import db, User
 from routes import main, auth, patient_bp, meal_bp, consultation_bp
+from food_routes import food_bp
 from config import Config
 import os
 import markdown
@@ -27,6 +28,7 @@ def create_app(config_class=Config):
     app.register_blueprint(patient_bp, url_prefix='/patient')
     app.register_blueprint(meal_bp, url_prefix='/meal')
     app.register_blueprint(consultation_bp, url_prefix='/consultation')
+    app.register_blueprint(food_bp)
     
     # Rota para servir arquivos estáticos
     @app.route('/static/<path:path>')

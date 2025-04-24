@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}Adicionar Alimento à Refeição{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Adicionar Alimento à Refeição</h2>
+            <a href="{{ url_for('meal.meal_plan_detail', plan_id=meal.meal_plan_id) }}" class="btn">
+                <i class="fas fa-arrow-left"></i> Voltar para o Plano Alimentar
+            </a>
+        </div>
+        <div class="card-content">
+            <div class="alert alert-info">
+                <p>
+                    <strong>Refeição:</strong> {{ meal.name }} 
+                    {% if meal.time %}({{ meal.time }}){% endif %}
+                </p>
+                <p>
+                    <strong>Plano:</strong> {{ meal_plan.title }}
+                </p>
+            </div>
+            
+            <!-- Busca de alimentos -->
+            <div class="search-container mb-4">
+                <h3>Buscar Alimento</h3>
+                <div class="input-group">
+                    <input type="text" id="food-search" class="form-control" placeholder="Digite o nome do alimento...">
+                    <button id="search-btn" class="btn">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="category-filter">Filtrar por categoria:</label>
+                    <select id="category-filter" class="form-control">
+                        <option value="">Todas as categorias</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Resultados da busca -->
+            <div id="search-results" class="mb-4">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Calorias</th>
+                                <th>Proteínas</th>
+                                <th>Carboidratos</th>
+                                <th>Gorduras</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            <!-- Resultados da busca serão exibidos aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-results" class="alert alert-warning d-none">
+                    Nenhum alimento encontrado com esses critérios.
+                </div>
+                <div id="loading" class="text-center d-none">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Buscando alimentos...</p>
+                </div>
+            </div>
+            
+            <!-- Formulário para adicionar alimento selecionado -->
+            <div id="add-form" class="d-none">
+                <h3>Adicionar à Refeição</h3>
+                <form id="meal-item-form" method="POST" action="{{ url_for('food.add_meal_item', meal_id=meal.id) }}">
+                    <input type="hidden" id="food-id" name="food_id">
+                    
+                    <div class="selected-food-info mb-3">
+                        <h4 id="selected-food-name"></h4>
+                        <p id="selected-food-category" class="text-muted"></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quantity">Quantidade (gramas):</label>
+                        <input type="number" id="quantity" name="quantity" class="form-control" 
+                               min="1" step="1" value="100" required>
+                    </div>
+                    
+                    <div class="nutrients-preview mt-3">
+                        <h5>Nutrientes na porção selecionada:</h5>
+                        <div class="nutrients-grid">
+                            <div class="nutrient-item">
+                                <span class="nutrient-label">Calorias:</span>
+                                <span id="cal-value" class="nutrient-value">0</span>
+                                <span class="nutrient-unit">kcal</span>
+                            </div>
+                            <div class="nutrient-item">
+                                <span class="nutrient-label">Proteínas:</span>
+                                <span id="prot-value" class="nutrient-value">0</span>
+                                <span class="nutrient-unit">g</span>
+                            </div>
+                            <div class="nutrient-item">
+                                <span class="nutrient-label">Carboidratos:</span>
+                                <span id="carb-value" class="nutrient-value">0</span>
+                                <span class="nutrient-unit">g</span>
+                            </div>
+                            <div class="nutrient-item">
+                                <span class="nutrient-label">Gorduras:</span>
+                                <span id="fat-value" class="nutrient-value">0</span>
+                                <span class="nutrient-unit">g</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn">
+                            <i class="fas fa-plus-circle"></i> Adicionar à Refeição
+                        </button>
+                        <button type="button" class="btn btn-danger" id="cancel-btn">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Alimentos já adicionados -->
+            <div class="current-foods mt-4">
+                <h3>Alimentos na Refeição</h3>
+                {% if meal_items %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Alimento</th>
+                                <th>Quantidade</th>
+                                <th>Calorias</th>
+                                <th>Proteínas</th>
+                                <th>Carboidratos</th>
+                                <th>Gorduras</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in meal_items %}
+                            <tr>
+                                <td>{{ item.food.name }}</td>
+                                <td>{{ item.quantity }}g</td>
+                                <td>{{ item.calories|round(1) }} kcal</td>
+                                <td>{{ item.proteins|round(1) }}g</td>
+                                <td>{{ item.carbs|round(1) }}g</td>
+                                <td>{{ item.fats|round(1) }}g</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('food.delete_meal_item', item_id=item.id) }}"
+                                          onsubmit="return confirm('Tem certeza que deseja remover este item?')">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="2">Total</th>
+                                <td><strong>{{ total_calories|round(1) }} kcal</strong></td>
+                                <td><strong>{{ total_proteins|round(1) }}g</strong></td>
+                                <td><strong>{{ total_carbs|round(1) }}g</strong></td>
+                                <td><strong>{{ total_fats|round(1) }}g</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    Nenhum alimento adicionado a esta refeição ainda.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    let selectedFood = null;
+    
+    // Buscar alimentos
+    $('#search-btn').click(function() {
+        searchFoods();
+    });
+    
+    // Buscar ao pressionar Enter no campo de busca
+    $('#food-search').keypress(function(e) {
+        if (e.which == 13) {
+            searchFoods();
+            e.preventDefault();
+        }
+    });
+    
+    // Filtrar por categoria
+    $('#category-filter').change(function() {
+        searchFoods();
+    });
+    
+    // Buscar alimentos via AJAX
+    function searchFoods() {
+        const query = $('#food-search').val();
+        const category = $('#category-filter').val();
+        
+        $('#loading').removeClass('d-none');
+        $('#no-results').addClass('d-none');
+        $('#results-body').empty();
+        
+        $.ajax({
+            url: "{{ url_for('food.search_foods') }}",
+            data: {
+                query: query,
+                category: category
+            },
+            success: function(data) {
+                $('#loading').addClass('d-none');
+                
+                if (data.foods && data.foods.length > 0) {
+                    displayResults(data.foods);
+                } else {
+                    $('#no-results').removeClass('d-none');
+                }
+            },
+            error: function() {
+                $('#loading').addClass('d-none');
+                alert('Ocorreu um erro ao buscar alimentos. Por favor, tente novamente.');
+            }
+        });
+    }
+    
+    // Exibir resultados da busca
+    function displayResults(foods) {
+        const tbody = $('#results-body');
+        tbody.empty();
+        
+        foods.forEach(function(food) {
+            const row = `
+                <tr>
+                    <td>${food.name}</td>
+                    <td>${food.category_name}</td>
+                    <td>${food.calories.toFixed(1)} kcal</td>
+                    <td>${food.proteins.toFixed(1)}g</td>
+                    <td>${food.carbs.toFixed(1)}g</td>
+                    <td>${food.fats.toFixed(1)}g</td>
+                    <td>
+                        <button class="btn btn-sm select-food" data-food-id="${food.id}">
+                            <i class="fas fa-plus"></i> Selecionar
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+        
+        // Adicionar evento para selecionar alimento
+        $('.select-food').click(function() {
+            const foodId = $(this).data('food-id');
+            selectFood(foodId);
+        });
+    }
+    
+    // Selecionar um alimento para adicionar
+    function selectFood(foodId) {
+        $.ajax({
+            url: "{{ url_for('food.get_food_data', food_id=0) }}".replace('0', foodId),
+            success: function(data) {
+                if (data.food) {
+                    selectedFood = data.food;
+                    
+                    // Preencher informações do alimento
+                    $('#food-id').val(selectedFood.id);
+                    $('#selected-food-name').text(selectedFood.name);
+                    $('#selected-food-category').text(selectedFood.category_name);
+                    
+                    // Mostrar formulário e esconder resultados
+                    $('#add-form').removeClass('d-none');
+                    $('#search-results').addClass('d-none');
+                    
+                    // Calcular nutrientes para a quantidade padrão
+                    updateNutrients();
+                }
+            },
+            error: function() {
+                alert('Ocorreu um erro ao obter dados do alimento. Por favor, tente novamente.');
+            }
+        });
+    }
+    
+    // Cancelar seleção de alimento
+    $('#cancel-btn').click(function() {
+        selectedFood = null;
+        $('#add-form').addClass('d-none');
+        $('#search-results').removeClass('d-none');
+    });
+    
+    // Atualizar cálculo de nutrientes ao alterar quantidade
+    $('#quantity').on('input', function() {
+        updateNutrients();
+    });
+    
+    // Calcular nutrientes com base na quantidade
+    function updateNutrients() {
+        if (!selectedFood) return;
+        
+        const quantity = parseFloat($('#quantity').val()) || 0;
+        const factor = quantity / 100; // Os valores nutricionais são para 100g
+        
+        $('#cal-value').text((selectedFood.calories * factor).toFixed(1));
+        $('#prot-value').text((selectedFood.proteins * factor).toFixed(1));
+        $('#carb-value').text((selectedFood.carbs * factor).toFixed(1));
+        $('#fat-value').text((selectedFood.fats * factor).toFixed(1));
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.nutrients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+.nutrient-item {
+    padding: 10px;
+    border: 1px solid var(--divider-color);
+    border-radius: 5px;
+    background-color: #f8f9fa;
+}
+.nutrient-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+.nutrient-value {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-right: 2px;
+}
+.selected-food-info {
+    padding: 15px;
+    background-color: #f0f4f8;
+    border-radius: 5px;
+    border-left: 3px solid var(--primary-color);
+}
+</style>
+{% endblock %}

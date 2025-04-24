@@ -35,6 +35,9 @@
                     <a href="{{ url_for('consultation.consultations_list') }}" class="nav-link {% if request.endpoint == 'consultation.consultations_list' %}active{% endif %}">Consultas</a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ url_for('food.foods_list') }}" class="nav-link {% if request.endpoint == 'food.foods_list' %}active{% endif %}">Tabela TACO</a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url_for('auth.logout') }}" class="nav-link">Sair</a>
                 </li>
                 {% else %}

@@ -492,7 +492,9 @@ Ex:
                         {% else %}snack{% endif %}">
                         <div class="meal-header">
                             <div class="meal-title">
-                                {{ meal.name }}
+                                <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}">
+                                    {{ meal.name }}
+                                </a>
                                 {% if meal.time %}
                                 <div class="meal-time">{{ meal.time }}</div>
                                 {% endif %}
@@ -525,6 +527,9 @@ Ex:
                         </div>
                         {% endif %}
                         <div class="meal-actions">
+                            <a href="{{ url_for('food.add_meal_item', meal_id=meal.id) }}" class="btn btn-sm">
+                                <i class="fas fa-utensils"></i> Adicionar Alimentos
+                            </a>
                             <button class="btn btn-sm btn-danger" onclick="confirmMealDelete({{ meal.id }})">
                                 <i class="fas fa-trash"></i>
                             </button>

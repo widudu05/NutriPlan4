@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{ category.name }}</h2>
+            <a href="{{ url_for('food.categories_list') }}" class="btn">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <div class="card-content">
+            <div class="category-header">
+                <div class="category-icon">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div class="category-info">
+                    <h3>{{ category.name }}</h3>
+                    <p>{{ foods|length }} alimentos nesta categoria</p>
+                </div>
+            </div>
+            
+            {% if foods %}
+            <div class="table-responsive mt-4">
+                <table class="table table-striped table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Energia (kcal)</th>
+                            <th>Proteínas (g)</th>
+                            <th>Carboidratos (g)</th>
+                            <th>Gorduras (g)</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for food in foods %}
+                        <tr>
+                            <td>{{ food.name }}</td>
+                            <td>{{ food.calories|round(1) }}</td>
+                            <td>{{ food.proteins|round(1) }}</td>
+                            <td>{{ food.carbs|round(1) }}</td>
+                            <td>{{ food.fats|round(1) }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('food.food_detail', food_id=food.id) }}" 
+                                   class="btn btn-sm" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mt-4">
+                <p class="lead">Nenhum alimento encontrado nesta categoria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Inicializar DataTable com opções personalizadas
+    $('.datatable').DataTable({
+        paging: true,
+        pageLength: 25,
+        ordering: true,
+        info: true,
+        searching: true,
+        responsive: true,
+        language: {
+            emptyTable: "Nenhum alimento encontrado",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ alimentos",
+            infoEmpty: "Mostrando 0 a 0 de 0 alimentos",
+            infoFiltered: "(filtrado de _MAX_ alimentos no total)",
+            lengthMenu: "Mostrar _MENU_ alimentos por página",
+            loadingRecords: "Carregando...",
+            processing: "Processando...",
+            search: "Buscar:",
+            zeroRecords: "Nenhum alimento encontrado",
+            paginate: {
+                first: "Primeiro",
+                last: "Último",
+                next: "Próximo",
+                previous: "Anterior"
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.category-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--divider-color);
+}
+.category-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-right: 20px;
+    padding: 15px;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.category-info h3 {
+    color: var(--text-primary);
+    margin-bottom: 5px;
+    font-size: 1.8rem;
+}
+.category-info p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

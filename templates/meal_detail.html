@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ meal.name }} - {{ meal_plan.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{ meal.name }}</h2>
+            <div class="header-actions">
+                <a href="{{ url_for('meal.meal_plan_detail', plan_id=meal_plan.id) }}" class="btn">
+                    <i class="fas fa-arrow-left"></i> Voltar para Plano Alimentar
+                </a>
+                <a href="{{ url_for('food.add_meal_item', meal_id=meal.id) }}" class="btn">
+                    <i class="fas fa-utensils"></i> Adicionar Alimentos
+                </a>
+            </div>
+        </div>
+        <div class="card-content">
+            <!-- Informações do plano e refeição -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <h4 class="info-title"><i class="fas fa-file-medical-alt"></i> Plano Alimentar</h4>
+                        <p><strong>Nome do plano:</strong> {{ meal_plan.title }}</p>
+                        <p><strong>Paciente:</strong> {{ patient.name }}</p>
+                        <p><strong>Período:</strong> {{ meal_plan.start_date.strftime('%d/%m/%Y') }}
+                            {% if meal_plan.end_date %} até {{ meal_plan.end_date.strftime('%d/%m/%Y') }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <h4 class="info-title"><i class="fas fa-utensils"></i> Refeição</h4>
+                        <p><strong>Nome:</strong> {{ meal.name }}</p>
+                        {% if meal.time %}<p><strong>Horário:</strong> {{ meal.time }}</p>{% endif %}
+                        <p><strong>Descrição:</strong> {{ meal.description }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resumo nutricional -->
+            <div class="nutrition-summary mb-4">
+                <h3>Resumo Nutricional</h3>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="nutrient-card">
+                            <div class="nutrient-value calories">{{ meal.calories|round|int }}</div>
+                            <div class="nutrient-label">Calorias</div>
+                            <div class="nutrient-unit">kcal</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="nutrient-card">
+                            <div class="nutrient-value proteins">{{ meal.proteins|round(1) }}</div>
+                            <div class="nutrient-label">Proteínas</div>
+                            <div class="nutrient-unit">g</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="nutrient-card">
+                            <div class="nutrient-value carbs">{{ meal.carbs|round(1) }}</div>
+                            <div class="nutrient-label">Carboidratos</div>
+                            <div class="nutrient-unit">g</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="nutrient-card">
+                            <div class="nutrient-value fats">{{ meal.fats|round(1) }}</div>
+                            <div class="nutrient-label">Gorduras</div>
+                            <div class="nutrient-unit">g</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alimentos na refeição -->
+            <div class="meal-items">
+                <div class="header-with-button">
+                    <h3>Alimentos na Refeição</h3>
+                    <a href="{{ url_for('food.add_meal_item', meal_id=meal.id) }}" class="btn">
+                        <i class="fas fa-plus"></i> Adicionar Alimento
+                    </a>
+                </div>
+                
+                {% if meal_items %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Alimento</th>
+                                <th>Categoria</th>
+                                <th>Quantidade</th>
+                                <th>Calorias</th>
+                                <th>Proteínas</th>
+                                <th>Carboidratos</th>
+                                <th>Gorduras</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in meal_items %}
+                            <tr>
+                                <td>{{ item.food.name }}</td>
+                                <td>{{ item.food.category.name }}</td>
+                                <td>{{ item.quantity|round|int }}g</td>
+                                <td>{{ item.calories|round(1) }} kcal</td>
+                                <td>{{ item.proteins|round(1) }}g</td>
+                                <td>{{ item.carbs|round(1) }}g</td>
+                                <td>{{ item.fats|round(1) }}g</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('food.delete_meal_item', item_id=item.id) }}"
+                                          onsubmit="return confirm('Tem certeza que deseja remover este alimento?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="3">Total</th>
+                                <td><strong>{{ meal.calories|round(1) }} kcal</strong></td>
+                                <td><strong>{{ meal.proteins|round(1) }}g</strong></td>
+                                <td><strong>{{ meal.carbs|round(1) }}g</strong></td>
+                                <td><strong>{{ meal.fats|round(1) }}g</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <p>Nenhum alimento adicionado a esta refeição ainda.</p>
+                    <a href="{{ url_for('food.add_meal_item', meal_id=meal.id) }}" class="btn mt-2">
+                        <i class="fas fa-plus"></i> Adicionar Alimento
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Gráfico de distribuição de macronutrientes -->
+            {% if meal.proteins or meal.carbs or meal.fats %}
+            <div class="macros-chart mt-5">
+                <h3>Distribuição de Macronutrientes</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="macrosChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="macros-info">
+                            <div class="macro-info-item">
+                                <div class="color-box proteins"></div>
+                                <div class="macro-info-text">
+                                    <div class="macro-info-name">Proteínas</div>
+                                    <div class="macro-info-value">{{ meal.proteins|round(1) }}g 
+                                        {% if meal.proteins and meal.proteins + meal.carbs + meal.fats > 0 %}
+                                        ({{ ((meal.proteins / (meal.proteins + meal.carbs + meal.fats)) * 100)|round|int }}%)
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="macro-info-item">
+                                <div class="color-box carbs"></div>
+                                <div class="macro-info-text">
+                                    <div class="macro-info-name">Carboidratos</div>
+                                    <div class="macro-info-value">{{ meal.carbs|round(1) }}g 
+                                        {% if meal.carbs and meal.proteins + meal.carbs + meal.fats > 0 %}
+                                        ({{ ((meal.carbs / (meal.proteins + meal.carbs + meal.fats)) * 100)|round|int }}%)
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="macro-info-item">
+                                <div class="color-box fats"></div>
+                                <div class="macro-info-text">
+                                    <div class="macro-info-name">Gorduras</div>
+                                    <div class="macro-info-value">{{ meal.fats|round(1) }}g 
+                                        {% if meal.fats and meal.proteins + meal.carbs + meal.fats > 0 %}
+                                        ({{ ((meal.fats / (meal.proteins + meal.carbs + meal.fats)) * 100)|round|int }}%)
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    {% if meal.proteins or meal.carbs or meal.fats %}
+    // Criar gráfico de macronutrientes
+    const ctx = document.getElementById('macrosChart').getContext('2d');
+    const macrosChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Proteínas', 'Carboidratos', 'Gorduras'],
+            datasets: [{
+                data: [
+                    {{ meal.proteins|default(0) }}, 
+                    {{ meal.carbs|default(0) }}, 
+                    {{ meal.fats|default(0) }}
+                ],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+.info-card {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    height: 100%;
+    border-left: 3px solid var(--primary-color);
+}
+.info-title {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+.nutrition-summary h3,
+.meal-items h3,
+.macros-chart h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--divider-color);
+}
+.nutrient-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    height: 100%;
+}
+.nutrient-value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.nutrient-value.calories { color: #dc3545; }
+.nutrient-value.proteins { color: #0d6efd; }
+.nutrient-value.carbs { color: #fd7e14; }
+.nutrient-value.fats { color: #6f42c1; }
+.nutrient-label {
+    font-size: 1rem;
+    margin-top: 5px;
+}
+.nutrient-unit {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+.header-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.chart-container {
+    height: 250px;
+}
+.macros-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    height: 100%;
+}
+.macro-info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.color-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+.color-box.proteins { background-color: rgba(54, 162, 235, 0.7); }
+.color-box.carbs { background-color: rgba(255, 159, 64, 0.7); }
+.color-box.fats { background-color: rgba(255, 99, 132, 0.7); }
+.macro-info-name {
+    font-size: 1rem;
+    font-weight: 500;
+}
+.macro-info-value {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}

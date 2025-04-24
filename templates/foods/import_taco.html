@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Importar Tabela TACO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Importar Dados da Tabela TACO</h2>
+            <a href="{{ url_for('food.foods_list') }}" class="btn">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <div class="card-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="import-info">
+                        <h3>O que é a tabela TACO?</h3>
+                        <p>
+                            A <strong>Tabela Brasileira de Composição de Alimentos (TACO)</strong> 
+                            é um projeto desenvolvido pela Universidade Estadual de Campinas (UNICAMP) 
+                            que reúne informações sobre a composição dos alimentos consumidos no Brasil.
+                        </p>
+                        <p>
+                            A tabela contém dados de diversos nutrientes, como: proteínas, 
+                            carboidratos, gorduras, fibras, vitaminas e minerais para centenas 
+                            de alimentos.
+                        </p>
+                        
+                        <h3 class="mt-4">Como usar esta funcionalidade?</h3>
+                        <p>
+                            Ao importar os dados da tabela TACO, você poderá:
+                        </p>
+                        <ul>
+                            <li>Consultar a composição nutricional de alimentos</li>
+                            <li>Adicionar alimentos aos planos alimentares dos pacientes</li>
+                            <li>Calcular automaticamente os macronutrientes das refeições</li>
+                            <li>Receber sugestões de alimentos para complementar os planos</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="import-status">
+                        <h3>Status da Importação</h3>
+                        
+                        {% if food_count > 0 %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> 
+                            A tabela TACO já está importada no sistema.
+                        </div>
+                        
+                        <div class="status-counts">
+                            <div class="status-item">
+                                <div class="status-number">{{ category_count }}</div>
+                                <div class="status-label">Categorias</div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-number">{{ food_count }}</div>
+                                <div class="status-label">Alimentos</div>
+                            </div>
+                        </div>
+                        
+                        <p class="mt-3">
+                            Você pode reimportar os dados se necessário, mas isso substituirá 
+                            os dados existentes.
+                        </p>
+                        
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            A tabela TACO ainda não foi importada.
+                        </div>
+                        <p>
+                            O sistema verificou o arquivo <code>attached_assets/Taco.xlsx</code> 
+                            e está pronto para importar os dados.
+                        </p>
+                        {% endif %}
+                        
+                        <form action="{{ url_for('food.process_taco') }}" method="POST" class="mt-4">
+                            <button type="submit" class="btn btn-lg btn-block">
+                                <i class="fas fa-file-import"></i> 
+                                {% if food_count > 0 %}Reimportar{% else %}Importar{% endif %} 
+                                Dados TACO
+                            </button>
+                            {% if food_count > 0 %}
+                            <div class="form-text text-muted mt-2">
+                                <small>
+                                    <i class="fas fa-info-circle"></i> 
+                                    Esta ação substituirá os dados existentes.
+                                </small>
+                            </div>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.import-info, .import-status {
+    height: 100%;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.import-info h3, .import-status h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+.status-counts {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+.status-item {
+    text-align: center;
+}
+.status-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+.status-label {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

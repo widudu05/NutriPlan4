@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ food.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{ food.name }}</h2>
+            <a href="{{ url_for('food.foods_list') }}" class="btn">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <div class="card-content">
+            <div class="row">
+                <!-- Informações básicas -->
+                <div class="col-md-6">
+                    <h3 class="section-title">Informações Básicas</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Nome:</th>
+                            <td>{{ food.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Categoria:</th>
+                            <td>{{ food.category.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>ID TACO:</th>
+                            <td>{{ food.taco_id }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Valor energético -->
+                <div class="col-md-6">
+                    <h3 class="section-title">Valor Energético (por 100g)</h3>
+                    <div class="energy-value">
+                        <div class="energy-number">{{ food.calories|round(1) }}</div>
+                        <div class="energy-unit">kcal</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <!-- Macronutrientes -->
+                <div class="col-md-6">
+                    <h3 class="section-title">Macronutrientes (por 100g)</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Proteínas:</th>
+                            <td>{{ food.proteins|round(1) }}g</td>
+                        </tr>
+                        <tr>
+                            <th>Carboidratos:</th>
+                            <td>{{ food.carbs|round(1) }}g</td>
+                        </tr>
+                        <tr>
+                            <th>Gorduras:</th>
+                            <td>{{ food.fats|round(1) }}g</td>
+                        </tr>
+                        <tr>
+                            <th>Fibras:</th>
+                            <td>{{ food.fiber|round(1) }}g</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Micronutrientes -->
+                <div class="col-md-6">
+                    <h3 class="section-title">Micronutrientes (por 100g)</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Sódio:</th>
+                            <td>{{ food.sodium|round(1) if food.sodium else 0 }}mg</td>
+                        </tr>
+                        <tr>
+                            <th>Cálcio:</th>
+                            <td>{{ food.calcium|round(1) if food.calcium else 0 }}mg</td>
+                        </tr>
+                        <tr>
+                            <th>Ferro:</th>
+                            <td>{{ food.iron|round(1) if food.iron else 0 }}mg</td>
+                        </tr>
+                        <tr>
+                            <th>Colesterol:</th>
+                            <td>{{ food.cholesterol|round(1) if food.cholesterol else 0 }}mg</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Gráfico de macronutrientes -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h3 class="section-title">Distribuição de Macronutrientes</h3>
+                    <div class="chart-container">
+                        <canvas id="macrosChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Adicionar ao plano alimentar (essa parte seria implementada em telas específicas de plano alimentar) -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h3 class="section-title">Calculadora de Porções</h3>
+                    <div class="portion-calculator">
+                        <div class="form-group">
+                            <label for="quantity">Quantidade (g):</label>
+                            <input type="number" id="quantity" class="form-control" value="100" min="1">
+                        </div>
+                        <button id="calculateBtn" class="btn">
+                            <i class="fas fa-calculator"></i> Calcular
+                        </button>
+                        
+                        <div id="calculationResults" class="mt-3">
+                            <h4>Valores nutricionais para <span id="calculatedQuantity">100</span>g:</h4>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Calorias:</th>
+                                    <td id="calculatedCalories">{{ food.calories|round(1) }}</td>
+                                    <td>kcal</td>
+                                </tr>
+                                <tr>
+                                    <th>Proteínas:</th>
+                                    <td id="calculatedProteins">{{ food.proteins|round(1) }}</td>
+                                    <td>g</td>
+                                </tr>
+                                <tr>
+                                    <th>Carboidratos:</th>
+                                    <td id="calculatedCarbs">{{ food.carbs|round(1) }}</td>
+                                    <td>g</td>
+                                </tr>
+                                <tr>
+                                    <th>Gorduras:</th>
+                                    <td id="calculatedFats">{{ food.fats|round(1) }}</td>
+                                    <td>g</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Dados para o gráfico
+    const protein = {{ food.proteins }};
+    const carbs = {{ food.carbs }};
+    const fat = {{ food.fats }};
+    
+    // Criar gráfico de macronutrientes
+    const ctx = document.getElementById('macrosChart').getContext('2d');
+    const macrosChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Proteínas', 'Carboidratos', 'Gorduras'],
+            datasets: [{
+                data: [protein, carbs, fat],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+    
+    // Calculadora de porções
+    $('#calculateBtn').click(function() {
+        const quantity = parseFloat($('#quantity').val() || 100);
+        const factor = quantity / 100;
+        
+        $('#calculatedQuantity').text(quantity);
+        $('#calculatedCalories').text(({{ food.calories }} * factor).toFixed(1));
+        $('#calculatedProteins').text(({{ food.proteins }} * factor).toFixed(1));
+        $('#calculatedCarbs').text(({{ food.carbs }} * factor).toFixed(1));
+        $('#calculatedFats').text(({{ food.fats }} * factor).toFixed(1));
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.energy-value {
+    display: flex;
+    align-items: baseline;
+    margin-top: 20px;
+}
+.energy-number {
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+.energy-unit {
+    font-size: 1.5rem;
+    margin-left: 5px;
+    color: var(--text-secondary);
+}
+.section-title {
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--divider-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+.chart-container {
+    height: 300px;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}

@@ -447,6 +447,30 @@ def add_meal(plan_id):
     flash('Refeição adicionada com sucesso!', 'success')
     return redirect(url_for('meal.meal_plan_detail', plan_id=plan_id))
 
+@meal_bp.route('/meal/<int:meal_id>')
+@login_required
+def meal_detail(meal_id):
+    """Exibe os detalhes de uma refeição específica"""
+    meal = Meal.query.get_or_404(meal_id)
+    meal_plan = meal.meal_plan
+    patient = Patient.query.get_or_404(meal_plan.patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para visualizar esta refeição.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    # Obter itens da refeição
+    meal_items = MealItem.query.filter_by(meal_id=meal_id).all()
+    
+    return render_template(
+        'meal_detail.html',
+        meal=meal,
+        meal_plan=meal_plan,
+        patient=patient,
+        meal_items=meal_items
+    )
+
 @meal_bp.route('/meal/<int:meal_id>/delete', methods=['POST'])
 @login_required
 def delete_meal(meal_id):
