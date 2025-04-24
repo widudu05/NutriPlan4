@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if is_edit %}
+        Editar Consulta
+    {% else %}
+        Nova Consulta
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="h2 mb-4">
+        {% if is_edit %}
+            Editar Consulta
+        {% else %}
+            Nova Consulta para {{ patient.name }}
+        {% endif %}
+        <a href="{% if is_edit %}{{ url_for('consultation.consultation_detail', consultation_id=consultation.id) }}{% else %}{{ url_for('patient.patient_detail', patient_id=patient.id) }}{% endif %}" class="btn btn-outline-primary btn-sm ml-2">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Dados da Consulta</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" 
+                  action="{% if is_edit %}{{ url_for('consultation.edit_consultation', consultation_id=consultation.id) }}{% else %}{{ url_for('consultation.add_consultation', patient_id=patient.id) }}{% endif %}" 
+                  class="needs-validation"
+                  novalidate>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="consultation_type">Tipo de Consulta*</label>
+                        <select class="form-control" id="consultation_type" name="consultation_type" required>
+                            <option value="">Selecione...</option>
+                            <option value="Primeira Consulta" {% if consultation and consultation.consultation_type == 'Primeira Consulta' %}selected{% endif %}>Primeira Consulta</option>
+                            <option value="Retorno" {% if consultation and consultation.consultation_type == 'Retorno' %}selected{% endif %}>Retorno</option>
+                            <option value="Avaliação Detalhada" {% if consultation and consultation.consultation_type == 'Avaliação Detalhada' %}selected{% endif %}>Avaliação Detalhada</option>
+                            <option value="Reavaliação" {% if consultation and consultation.consultation_type == 'Reavaliação' %}selected{% endif %}>Reavaliação</option>
+                            <option value="Orientação" {% if consultation and consultation.consultation_type == 'Orientação' %}selected{% endif %}>Orientação</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            O tipo de consulta é obrigatório.
+                        </div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="status">Status</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="Agendada" {% if consultation and consultation.status == 'Agendada' %}selected{% endif %}>Agendada</option>
+                            <option value="Realizada" {% if consultation and consultation.status == 'Realizada' %}selected{% endif %}>Realizada</option>
+                            <option value="Cancelada" {% if consultation and consultation.status == 'Cancelada' %}selected{% endif %}>Cancelada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="date">Data e Hora*</label>
+                        <input type="datetime-local" class="form-control" id="date" name="date" 
+                               value="{% if consultation %}{{ consultation.date.strftime('%Y-%m-%dT%H:%M') }}{% endif %}" 
+                               required>
+                        <div class="invalid-feedback">
+                            A data e hora são obrigatórias.
+                        </div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="next_appointment">Próxima Consulta</label>
+                        <input type="datetime-local" class="form-control" id="next_appointment" name="next_appointment" 
+                               value="{% if consultation and consultation.next_appointment %}{{ consultation.next_appointment.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="main_complaint">Queixa Principal</label>
+                    <textarea class="form-control" id="main_complaint" name="main_complaint" rows="3">{% if consultation %}{{ consultation.main_complaint }}{% endif %}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="objective">Objetivo</label>
+                    <textarea class="form-control" id="objective" name="objective" rows="3">{% if consultation %}{{ consultation.objective }}{% endif %}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Observações</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{% if consultation %}{{ consultation.notes }}{% endif %}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    {% if is_edit %}Atualizar Consulta{% else %}Agendar Consulta{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Validação do formulário
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                // Fetch all the forms we want to apply custom Bootstrap validation styles to
+                var forms = document.getElementsByClassName('needs-validation');
+                // Loop over them and prevent submission
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+    });
+</script>
+{% endblock %}

@@ -1,8 +1,10 @@
 from flask import Flask, send_from_directory
+from markupsafe import Markup
 from models import db, User
-from routes import main, auth, patient_bp, meal_bp
+from routes import main, auth, patient_bp, meal_bp, consultation_bp
 from config import Config
 import os
+import markdown
 
 def create_app(config_class=Config):
     """Função para criar e configurar a aplicação Flask"""
@@ -12,11 +14,19 @@ def create_app(config_class=Config):
     # Inicialização de extensões
     db.init_app(app)
     
+    # Filtro para converter markdown para HTML
+    @app.template_filter('markdown')
+    def render_markdown(text):
+        if text:
+            return Markup(markdown.markdown(text))
+        return ""
+    
     # Registro de blueprints
     app.register_blueprint(auth)
     app.register_blueprint(main)
     app.register_blueprint(patient_bp, url_prefix='/patient')
     app.register_blueprint(meal_bp, url_prefix='/meal')
+    app.register_blueprint(consultation_bp, url_prefix='/consultation')
     
     # Rota para servir arquivos estáticos
     @app.route('/static/<path:path>')

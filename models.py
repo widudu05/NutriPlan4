@@ -34,6 +34,7 @@ class Patient(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     measurements = db.relationship('Measurement', backref='patient', lazy=True, cascade="all, delete-orphan")
     meal_plans = db.relationship('MealPlan', backref='patient', lazy=True, cascade="all, delete-orphan")
+    consultations = db.relationship('Consultation', backref='patient', lazy=True, cascade="all, delete-orphan")
     
     @property
     def age(self):
@@ -128,3 +129,30 @@ class Meal(db.Model):
     
     def __repr__(self):
         return f'<Meal {self.name}>'
+
+class Consultation(db.Model):
+    """Modelo para consultas nutricionais"""
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    next_appointment = db.Column(db.DateTime, nullable=True)
+    consultation_type = db.Column(db.String(50), nullable=False)  # Primeira consulta, Retorno, etc.
+    status = db.Column(db.String(20), nullable=False, default='Agendada')  # Agendada, Realizada, Cancelada
+    main_complaint = db.Column(db.Text, nullable=True)
+    objective = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+    consultation_details = db.relationship('ConsultationDetail', backref='consultation', lazy=True, cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f'<Consultation {self.date} - {self.consultation_type}>'
+
+class ConsultationDetail(db.Model):
+    """Modelo para detalhes específicos da consulta (sub-abas)"""
+    id = db.Column(db.Integer, primary_key=True)
+    tab_name = db.Column(db.String(50), nullable=False)  # Nome da sub-aba
+    data = db.Column(db.JSON, nullable=True)  # Dados específicos da sub-aba em formato JSON
+    text_data = db.Column(db.Text, nullable=True)  # Dados em formato texto para campos longos
+    consultation_id = db.Column(db.Integer, db.ForeignKey('consultation.id'), nullable=False)
+    
+    def __repr__(self):
+        return f'<ConsultationDetail {self.tab_name}>'

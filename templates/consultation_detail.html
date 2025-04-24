@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Consulta{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="h2 mb-4">
+        Consulta de {{ patient.name }}
+        <a href="{{ url_for('consultation.patient_consultations', patient_id=patient.id) }}" class="btn btn-outline-primary btn-sm ml-2">
+            <i class="fas fa-arrow-left"></i> Voltar às Consultas
+        </a>
+    </h1>
+
+    <div class="row">
+        <!-- Detalhes Básicos da Consulta -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Informações da Consulta</h6>
+                    <div>
+                        <a href="{{ url_for('consultation.edit_consultation', consultation_id=consultation.id) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Tipo</h5>
+                        <p>{{ consultation.consultation_type }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Data</h5>
+                        <p>{{ consultation.date.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Status</h5>
+                        <p>
+                            {% if consultation.status == 'Agendada' %}
+                            <span class="badge badge-warning">Agendada</span>
+                            {% elif consultation.status == 'Realizada' %}
+                            <span class="badge badge-success">Realizada</span>
+                            {% elif consultation.status == 'Cancelada' %}
+                            <span class="badge badge-danger">Cancelada</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ consultation.status }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if consultation.next_appointment %}
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Próxima Consulta</h5>
+                        <p>{{ consultation.next_appointment.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    {% endif %}
+                    {% if consultation.main_complaint %}
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Queixa Principal</h5>
+                        <p>{{ consultation.main_complaint }}</p>
+                    </div>
+                    {% endif %}
+                    {% if consultation.objective %}
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Objetivo</h5>
+                        <p>{{ consultation.objective }}</p>
+                    </div>
+                    {% endif %}
+                    {% if consultation.notes %}
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">Observações</h5>
+                        <p>{{ consultation.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo das Sub-abas -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalhes da Consulta</h6>
+                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addTabModal">
+                        <i class="fas fa-plus"></i> Nova Aba
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if consultation_details %}
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" id="consultationTabs" role="tablist">
+                        {% for detail in consultation_details %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if loop.first %}active{% endif %}" 
+                               id="tab-{{ detail.id }}" 
+                               data-toggle="tab" 
+                               href="#content-{{ detail.id }}" 
+                               role="tab" 
+                               aria-controls="content-{{ detail.id }}" 
+                               aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                {{ detail.tab_name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content p-3 border border-top-0 rounded-bottom">
+                        {% for detail in consultation_details %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                             id="content-{{ detail.id }}" 
+                             role="tabpanel" 
+                             aria-labelledby="tab-{{ detail.id }}">
+                            
+                            <div class="d-flex justify-content-end mb-3">
+                                <button class="btn btn-warning btn-sm mr-2" data-toggle="modal" data-target="#editTabModal-{{ detail.id }}">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteTabModal-{{ detail.id }}">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            </div>
+                            
+                            {% if detail.text_data %}
+                            <div class="consultation-detail-content">
+                                {{ detail.text_data|markdown|safe }}
+                            </div>
+                            {% elif detail.data %}
+                            <div class="consultation-detail-json">
+                                <pre>{{ detail.data|tojson(indent=2) }}</pre>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">Nenhum conteúdo disponível.</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Modal de Edição de Aba -->
+                        <div class="modal fade" id="editTabModal-{{ detail.id }}" tabindex="-1" role="dialog" aria-labelledby="editTabModalLabel-{{ detail.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editTabModalLabel-{{ detail.id }}">Editar Aba: {{ detail.tab_name }}</h5>
+                                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('consultation.edit_consultation_detail', detail_id=detail.id) }}">
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <label for="tab_name_{{ detail.id }}">Nome da Aba*</label>
+                                                <input type="text" class="form-control" id="tab_name_{{ detail.id }}" name="tab_name" value="{{ detail.tab_name }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="text_data_{{ detail.id }}">Conteúdo</label>
+                                                <textarea class="form-control" id="text_data_{{ detail.id }}" name="text_data" rows="10">{{ detail.text_data }}</textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="json_data_{{ detail.id }}">Dados JSON (opcional)</label>
+                                                <textarea class="form-control" id="json_data_{{ detail.id }}" name="json_data" rows="5">{% if detail.data %}{{ detail.data|tojson(indent=2) }}{% endif %}</textarea>
+                                                <small class="form-text text-muted">Formato JSON válido. Use apenas se souber o que está fazendo.</small>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal de Exclusão de Aba -->
+                        <div class="modal fade" id="deleteTabModal-{{ detail.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteTabModalLabel-{{ detail.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteTabModalLabel-{{ detail.id }}">Confirmar Exclusão</h5>
+                                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Tem certeza que deseja excluir a aba "{{ detail.tab_name }}"?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                                        <form method="POST" action="{{ url_for('consultation.delete_consultation_detail', detail_id=detail.id) }}">
+                                            <button type="submit" class="btn btn-danger">Excluir</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                        <p class="lead">Nenhuma aba adicional foi criada para esta consulta.</p>
+                        <button class="btn btn-primary" data-toggle="modal" data-target="#addTabModal">
+                            <i class="fas fa-plus"></i> Adicionar Primeira Aba
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar nova aba -->
+<div class="modal fade" id="addTabModal" tabindex="-1" role="dialog" aria-labelledby="addTabModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTabModalLabel">Adicionar Nova Aba</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('consultation.add_consultation_tab', consultation_id=consultation.id) }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="tab_name">Nome da Aba*</label>
+                        <input type="text" class="form-control" id="tab_name" name="tab_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="text_data">Conteúdo</label>
+                        <textarea class="form-control" id="text_data" name="text_data" rows="10"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="json_data">Dados JSON (opcional)</label>
+                        <textarea class="form-control" id="json_data" name="json_data" rows="5"></textarea>
+                        <small class="form-text text-muted">Formato JSON válido. Use apenas se souber o que está fazendo.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Aba</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão da Consulta -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir esta consulta?
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('consultation.delete_consultation', consultation_id=consultation.id) }}">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Validação de JSON ao enviar o formulário
+        $('form').submit(function(event) {
+            const jsonField = $(this).find('textarea[name="json_data"]');
+            if (jsonField.val().trim()) {
+                try {
+                    JSON.parse(jsonField.val());
+                } catch (e) {
+                    event.preventDefault();
+                    alert('JSON inválido! Verifique o formato.');
+                    jsonField.focus();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

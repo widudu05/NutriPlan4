@@ -101,3 +101,71 @@ def calculate_macros(total_calories, protein_pct=0.25, fat_pct=0.25):
         'carbs': carb_g,
         'fat': fat_g
     }
+
+def create_default_consultation_tabs(consultation, db_session):
+    """
+    Cria as abas padrão para uma nova consulta com base no Excel fornecido
+    
+    Args:
+        consultation: Objeto do tipo Consultation
+        db_session: Sessão ativa do banco de dados para adicionar os objetos
+    
+    Returns:
+        None
+    """
+    from models import ConsultationDetail
+    
+    # Lista de abas padrão baseadas no arquivo Excel
+    default_tabs = [
+        {
+            "name": "QPC", 
+            "title": "Questionário de Pré-Consulta",
+            "text_data": "# Questionário de Pré-Consulta\n\nUse este espaço para registrar as respostas do questionário pré-consulta do paciente."
+        },
+        {
+            "name": "Anamnese", 
+            "title": "Anamnese Smart",
+            "text_data": "# Anamnese Smart\n\n## Queixa Principal\n\n## Histórico Clínico\n\n## Histórico Familiar\n\n## Hábitos de Vida\n\n## Uso de Medicamentos\n\n## Alergias e Intolerâncias"
+        },
+        {
+            "name": "Exames", 
+            "title": "Marcadores bioquímicos",
+            "text_data": "# Marcadores Bioquímicos\n\n## Exames de Sangue\n\n## Outros Exames\n\n## Observações"
+        },
+        {
+            "name": "Consumo", 
+            "title": "Consumo alimentar",
+            "text_data": "# Consumo Alimentar\n\n## Recordatório Habitual\n\n## Preferências Alimentares\n\n## Aversões Alimentares\n\n## Horários das Refeições"
+        },
+        {
+            "name": "Antropometria", 
+            "title": "Avaliação antropométrica",
+            "text_data": "# Avaliação Antropométrica\n\n## Medições Atuais\n\n## Composição Corporal\n\n## Histórico de Peso"
+        },
+        {
+            "name": "Conduta", 
+            "title": "Evolução e Conduta",
+            "text_data": "# Evolução e Conduta\n\n## Diagnóstico Nutricional\n\n## Objetivos do Tratamento\n\n## Conduta Nutricional\n\n## Próximos Passos"
+        },
+        {
+            "name": "Medidas", 
+            "title": "Medidas Detalhadas",
+            "text_data": "# Medidas Detalhadas\n\n## Dobras Cutâneas\n\n## Circunferências\n\n## Cálculos Específicos"
+        },
+        {
+            "name": "Orientações", 
+            "title": "Orientações ao Paciente",
+            "text_data": "# Orientações ao Paciente\n\n## Recomendações Gerais\n\n## Lista de Substituições\n\n## Material Educativo"
+        }
+    ]
+    
+    # Criar e adicionar as abas
+    for tab in default_tabs:
+        consultation_detail = ConsultationDetail(
+            tab_name=tab["title"],
+            text_data=tab["text_data"],
+            consultation_id=consultation.id
+        )
+        db_session.add(consultation_detail)
+    
+    # Não é necessário fazer commit aqui, será feito no contexto que chamou esta função

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from models import db, User, Patient, Measurement, MealPlan, Meal
+from models import db, User, Patient, Measurement, MealPlan, Meal, Consultation, ConsultationDetail
 from utils import login_required, validate_email, validate_password, format_date, format_date_display
-from utils import calculate_energy_needs, calculate_macros
+from utils import calculate_energy_needs, calculate_macros, create_default_consultation_tabs
 from datetime import datetime, timedelta
 from sqlalchemy import desc
 import json
@@ -11,6 +11,7 @@ main = Blueprint('main', __name__)
 auth = Blueprint('auth', __name__)
 patient_bp = Blueprint('patient', __name__)
 meal_bp = Blueprint('meal', __name__)
+consultation_bp = Blueprint('consultation', __name__)
 
 # Rotas de autenticação
 @auth.route('/login', methods=['GET', 'POST'])
@@ -517,3 +518,255 @@ def calculate_macros_api():
         return jsonify(macros)
     except (ValueError, TypeError):
         return jsonify({'error': 'Valores inválidos'}), 400
+        
+# Rotas de Consultas
+@consultation_bp.route('/consultations')
+@login_required
+def consultations_list():
+    user_id = session.get('user_id')
+    # Obtém todas as consultas de pacientes do nutricionista
+    consultations = Consultation.query.join(Patient).filter(Patient.user_id == user_id).order_by(desc(Consultation.date)).all()
+    return render_template('consultations.html', consultations=consultations)
+
+@consultation_bp.route('/patient/<int:patient_id>/consultations')
+@login_required
+def patient_consultations(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para acessar as consultas deste paciente.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    consultations = Consultation.query.filter_by(patient_id=patient_id).order_by(desc(Consultation.date)).all()
+    return render_template('consultations.html', consultations=consultations, patient=patient)
+
+@consultation_bp.route('/patient/<int:patient_id>/consultation/add', methods=['GET', 'POST'])
+@login_required
+def add_consultation(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para adicionar consultas a este paciente.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    if request.method == 'POST':
+        consultation_type = request.form.get('consultation_type')
+        date_str = request.form.get('date')
+        next_appointment_str = request.form.get('next_appointment')
+        status = request.form.get('status')
+        main_complaint = request.form.get('main_complaint')
+        objective = request.form.get('objective')
+        notes = request.form.get('notes')
+        
+        # Validações básicas
+        if not consultation_type or not date_str:
+            flash('Tipo de consulta e data são obrigatórios.', 'danger')
+            return redirect(url_for('consultation.add_consultation', patient_id=patient_id))
+        
+        # Converter datas
+        try:
+            date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M')
+            next_appointment = datetime.strptime(next_appointment_str, '%Y-%m-%dT%H:%M') if next_appointment_str else None
+        except ValueError:
+            flash('Formato de data inválido.', 'danger')
+            return redirect(url_for('consultation.add_consultation', patient_id=patient_id))
+        
+        # Criar consulta
+        consultation = Consultation(
+            consultation_type=consultation_type,
+            date=date,
+            next_appointment=next_appointment,
+            status=status,
+            main_complaint=main_complaint,
+            objective=objective,
+            notes=notes,
+            patient_id=patient_id
+        )
+        
+        db.session.add(consultation)
+        db.session.commit()
+        
+        # Criar sub-abas padrão baseadas no Excel
+        create_default_consultation_tabs(consultation, db.session)
+        db.session.commit()
+        
+        flash('Consulta agendada com sucesso!', 'success')
+        return redirect(url_for('consultation.consultation_detail', consultation_id=consultation.id))
+    
+    return render_template('consultation_form.html', patient=patient)
+
+@consultation_bp.route('/consultation/<int:consultation_id>')
+@login_required
+def consultation_detail(consultation_id):
+    consultation = Consultation.query.get_or_404(consultation_id)
+    patient = Patient.query.get_or_404(consultation.patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para acessar esta consulta.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    # Obter detalhes das sub-abas
+    consultation_details = ConsultationDetail.query.filter_by(consultation_id=consultation_id).all()
+    
+    return render_template('consultation_detail.html', 
+                          consultation=consultation, 
+                          patient=patient,
+                          consultation_details=consultation_details)
+
+@consultation_bp.route('/consultation/<int:consultation_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_consultation(consultation_id):
+    consultation = Consultation.query.get_or_404(consultation_id)
+    patient = Patient.query.get_or_404(consultation.patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para editar esta consulta.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    if request.method == 'POST':
+        consultation.consultation_type = request.form.get('consultation_type')
+        date_str = request.form.get('date')
+        next_appointment_str = request.form.get('next_appointment')
+        consultation.status = request.form.get('status')
+        consultation.main_complaint = request.form.get('main_complaint')
+        consultation.objective = request.form.get('objective')
+        consultation.notes = request.form.get('notes')
+        
+        # Validações básicas
+        if not consultation.consultation_type or not date_str:
+            flash('Tipo de consulta e data são obrigatórios.', 'danger')
+            return redirect(url_for('consultation.edit_consultation', consultation_id=consultation_id))
+        
+        # Converter datas
+        try:
+            consultation.date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M')
+            consultation.next_appointment = datetime.strptime(next_appointment_str, '%Y-%m-%dT%H:%M') if next_appointment_str else None
+        except ValueError:
+            flash('Formato de data inválido.', 'danger')
+            return redirect(url_for('consultation.edit_consultation', consultation_id=consultation_id))
+        
+        db.session.commit()
+        
+        flash('Consulta atualizada com sucesso!', 'success')
+        return redirect(url_for('consultation.consultation_detail', consultation_id=consultation_id))
+    
+    return render_template('consultation_form.html', 
+                          patient=patient, 
+                          consultation=consultation,
+                          is_edit=True)
+
+@consultation_bp.route('/consultation/<int:consultation_id>/delete', methods=['POST'])
+@login_required
+def delete_consultation(consultation_id):
+    consultation = Consultation.query.get_or_404(consultation_id)
+    patient = Patient.query.get_or_404(consultation.patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para excluir esta consulta.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    db.session.delete(consultation)
+    db.session.commit()
+    
+    flash('Consulta excluída com sucesso.', 'success')
+    return redirect(url_for('consultation.patient_consultations', patient_id=patient.id))
+
+@consultation_bp.route('/consultation/<int:consultation_id>/tab/add', methods=['POST'])
+@login_required
+def add_consultation_tab(consultation_id):
+    consultation = Consultation.query.get_or_404(consultation_id)
+    patient = Patient.query.get_or_404(consultation.patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para adicionar abas a esta consulta.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    tab_name = request.form.get('tab_name')
+    text_data = request.form.get('text_data')
+    json_data = request.form.get('json_data')
+    
+    # Validação básica
+    if not tab_name:
+        flash('Nome da aba é obrigatório.', 'danger')
+        return redirect(url_for('consultation.consultation_detail', consultation_id=consultation_id))
+    
+    # Converter dados JSON
+    data = None
+    if json_data:
+        try:
+            data = json.loads(json_data)
+        except json.JSONDecodeError:
+            flash('Dados JSON inválidos.', 'danger')
+            return redirect(url_for('consultation.consultation_detail', consultation_id=consultation_id))
+    
+    # Criar detalhe da consulta
+    consultation_detail = ConsultationDetail(
+        tab_name=tab_name,
+        text_data=text_data,
+        data=data,
+        consultation_id=consultation_id
+    )
+    
+    db.session.add(consultation_detail)
+    db.session.commit()
+    
+    flash('Aba adicionada com sucesso!', 'success')
+    return redirect(url_for('consultation.consultation_detail', consultation_id=consultation_id))
+
+@consultation_bp.route('/consultation_detail/<int:detail_id>/edit', methods=['POST'])
+@login_required
+def edit_consultation_detail(detail_id):
+    detail = ConsultationDetail.query.get_or_404(detail_id)
+    consultation = Consultation.query.get_or_404(detail.consultation_id)
+    patient = Patient.query.get_or_404(consultation.patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para editar esta aba.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    detail.tab_name = request.form.get('tab_name')
+    detail.text_data = request.form.get('text_data')
+    json_data = request.form.get('json_data')
+    
+    # Validação básica
+    if not detail.tab_name:
+        flash('Nome da aba é obrigatório.', 'danger')
+        return redirect(url_for('consultation.consultation_detail', consultation_id=consultation.id))
+    
+    # Converter dados JSON
+    if json_data:
+        try:
+            detail.data = json.loads(json_data)
+        except json.JSONDecodeError:
+            flash('Dados JSON inválidos.', 'danger')
+            return redirect(url_for('consultation.consultation_detail', consultation_id=consultation.id))
+    
+    db.session.commit()
+    
+    flash('Aba atualizada com sucesso!', 'success')
+    return redirect(url_for('consultation.consultation_detail', consultation_id=consultation.id))
+
+@consultation_bp.route('/consultation_detail/<int:detail_id>/delete', methods=['POST'])
+@login_required
+def delete_consultation_detail(detail_id):
+    detail = ConsultationDetail.query.get_or_404(detail_id)
+    consultation = Consultation.query.get_or_404(detail.consultation_id)
+    patient = Patient.query.get_or_404(consultation.patient_id)
+    
+    # Verificar se o paciente pertence ao usuário logado
+    if patient.user_id != session.get('user_id'):
+        flash('Você não tem permissão para excluir esta aba.', 'danger')
+        return redirect(url_for('patient.patients_list'))
+    
+    db.session.delete(detail)
+    db.session.commit()
+    
+    flash('Aba excluída com sucesso.', 'success')
+    return redirect(url_for('consultation.consultation_detail', consultation_id=consultation.id))
