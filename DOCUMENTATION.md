@@ -30,6 +30,7 @@ O sistema foi desenvolvido utilizando a arquitetura MVC (Model-View-Controller) 
 - jQuery: Biblioteca JavaScript
 - Chart.js: Biblioteca para criação de gráficos
 - DataTables: Plugin para tabelas interativas
+- Visual Storytelling: Módulo personalizado para narrativas visuais e representações gráficas de dados
 
 ## Estrutura do Banco de Dados
 
@@ -150,6 +151,14 @@ O sistema foi desenvolvido utilizando a arquitetura MVC (Model-View-Controller) 
 - Próximas consultas agendadas
 - Estatísticas rápidas
 
+### Storytelling Visual
+- **Timeline de Progresso**: Visualização cronológica do histórico de peso/medidas do paciente
+- **Narrativa de Objetivos**: Apresentação visual de metas (ganho/perda de peso) com progresso e recomendações
+- **Análise de Macronutrientes**: Visualização interativa da distribuição de proteínas, carboidratos e gorduras
+- **Recomendações Contextuais**: Sugestões personalizadas com base no tipo de refeição (café da manhã, almoço, jantar)
+- **Ícones Motivacionais**: Elementos visuais que destacam conquistas e tendências positivas
+- **Visualização de Tendências**: Representação gráfica de mudanças nas medidas antropométricas
+
 ## Segurança
 
 - Autenticação de usuários
@@ -195,6 +204,46 @@ Para contribuir com o projeto:
 3. Faça commit das mudanças: `git commit -am 'Adiciona nova funcionalidade'`
 4. Envie para o seu fork: `git push origin feature/nova-funcionalidade`
 5. Abra um Pull Request
+
+## Arquitetura do Storytelling Visual
+
+A funcionalidade de storytelling visual foi implementada através de um conjunto de componentes JavaScript, CSS e templates HTML que trabalham juntos para criar uma experiência interativa e informativa.
+
+### Arquivos Principais
+
+- **static/js/visual-storytelling.js**: Contém todas as funções JavaScript para criação de narrativas visuais
+- **static/css/visual-storytelling.css**: Contém os estilos específicos para os elementos visuais
+- **templates/patient_detail.html**: Implementa os elementos de narrativa do paciente
+- **templates/meal_detail.html**: Implementa a narrativa visual de macronutrientes
+
+### Funções do Módulo de Storytelling
+
+O módulo de storytelling visual implementa as seguintes funções principais:
+
+1. **initVisualStorytelling()**: Inicializa todos os elementos de storytelling visual na página
+2. **createProgressJourney()**: Cria a narrativa visual da jornada de progresso do paciente
+3. **createNutritionalStory()**: Gera a história visual dos macronutrientes no plano alimentar
+4. **createGoalNarrative()**: Cria a visualização narrativa para os objetivos do paciente
+5. **createMacroNarrative()**: Gera a análise nutricional contextual para diferentes tipos de refeições
+6. **getMotivationalMessage()**: Gera mensagens motivacionais personalizadas com base no progresso
+7. **getMotivationalIcon()**: Fornece ícones visuais representando o estado atual e tendências
+
+### Implementação de Visualizações
+
+- **Timeline de Progresso**: Implementada como uma linha do tempo interativa com marcadores para eventos significativos
+- **Barras de Macronutrientes**: Representação visual colorida da distribuição de proteínas, carboidratos e gorduras
+- **Narrativa de Objetivos**: Representação visual do progresso em direção a metas com marcadores interativos
+- **Ícones Contextuais**: Elementos visuais que mudam de acordo com o contexto e o progresso
+
+### Como Estender
+
+Para adicionar novos elementos de storytelling visual:
+
+1. Defina uma nova função no arquivo `visual-storytelling.js`
+2. Adicione os estilos correspondentes em `visual-storytelling.css`
+3. Implemente os elementos HTML no template apropriado
+4. Adicione atributos `data-*` para passar informações do backend ao JavaScript
+5. Inicialize a função no carregamento da página
 
 ## Filtros de Template
 
@@ -244,7 +293,16 @@ Este filtro é especialmente importante nas seguintes funcionalidades:
 
 ## Histórico de Atualizações e Correções
 
-### Versão 1.1 (24/04/2025)
+### Versão 1.2 (24/04/2025)
+- **Adição**: Implementado módulo completo de Storytelling Visual para melhorar a experiência do usuário
+- **Recurso**: Timeline de progresso do paciente com visualização interativa
+- **Recurso**: Visualização da distribuição de macronutrientes em refeições específicas
+- **Recurso**: Narrativa visual personalizada para objetivos de peso com marcadores de progresso
+- **Recurso**: Recomendações contextuais baseadas no tipo de refeição (café da manhã, almoço, jantar)
+- **Melhoria**: Adicionados ícones motivacionais que refletem o progresso do paciente
+- **Documentação**: Atualizada a documentação técnica com informações detalhadas sobre o módulo de storytelling visual
+
+### Versão 1.1 (22/04/2025)
 - **Correção**: Implementado filtro nl2br para processar corretamente quebras de linha nos planos alimentares e consultas
 - **Melhoria**: Adicionado tratamento especial para suportar tanto quebras de linha regulares (`\n`) quanto escapadas (`\\n`)
 - **Correção**: Resolvido problema ao exibir observações com múltiplas linhas em planos alimentares
