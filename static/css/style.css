@@ -42,27 +42,19 @@ body {
 
 .header-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
-  position: relative;
 }
 
 .logo {
-  position: absolute;
-  left: 50%;
-  top: -30px;
-  transform: translateX(-50%);
   font-size: 24px;
   font-weight: 700;
   color: var(--white);
   text-decoration: none;
-  background-color: var(--primary-dark);
-  padding: 8px 15px;
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  z-index: 10;
+  flex: 0 0 auto;
+  margin-right: 20px;
 }
 
 .logo span {
@@ -309,11 +301,8 @@ body {
   }
   
   .logo {
-    position: static;
-    transform: none;
-    margin: 15px auto;
-    display: block;
-    text-align: center;
+    margin-bottom: 10px;
+    text-align: left;
   }
   
   .nav-center {
