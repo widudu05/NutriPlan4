@@ -16,41 +16,48 @@
 <body>
     <!-- Cabeçalho -->
     <header class="header">
-        <a href="{{ url_for('main.index') }}" class="logo">Nutri<span>Plan</span></a>
-        <nav>
-            <button class="menu-toggle" aria-label="Menu">
-                <i class="fas fa-bars"></i>
-            </button>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Início</a>
-                </li>
-                {% if session.get('user_id') %}
-                <li class="nav-item">
-                    <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('patient.patients_list') }}" class="nav-link {% if request.endpoint == 'patient.patients_list' %}active{% endif %}">Pacientes</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('consultation.consultations_list') }}" class="nav-link {% if request.endpoint == 'consultation.consultations_list' %}active{% endif %}">Consultas</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('food.foods_list') }}" class="nav-link {% if request.endpoint == 'food.foods_list' %}active{% endif %}">Tabela TACO</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('auth.logout') }}" class="nav-link">Sair</a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a href="{{ url_for('auth.login') }}" class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('auth.register') }}" class="nav-link {% if request.endpoint == 'auth.register' %}active{% endif %}">Cadastre-se</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
+        <div class="header-container">
+            <a href="{{ url_for('main.index') }}" class="logo">Nutri<span>Plan</span></a>
+            <nav class="nav-center">
+                <button class="menu-toggle" aria-label="Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <ul class="nav-menu">
+                    {% if session.get('user_id') %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('patient.patients_list') }}" class="nav-link {% if request.endpoint == 'patient.patients_list' %}active{% endif %}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('consultation.consultations_list') }}" class="nav-link {% if request.endpoint == 'consultation.consultations_list' %}active{% endif %}">Consultas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('food.foods_list') }}" class="nav-link {% if request.endpoint == 'food.foods_list' %}active{% endif %}">Tabela TACO</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('auth.login') }}" class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('auth.register') }}" class="nav-link {% if request.endpoint == 'auth.register' %}active{% endif %}">Cadastre-se</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% if session.get('user_id') %}
+            <div class="user-actions">
+                <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">Sair</a>
+            </div>
+            {% endif %}
+        </div>
     </header>
 
     <!-- Mensagens Flash -->
