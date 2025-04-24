@@ -196,6 +196,37 @@ Para contribuir com o projeto:
 4. Envie para o seu fork: `git push origin feature/nova-funcionalidade`
 5. Abra um Pull Request
 
+## Filtros de Template
+
+A aplicação utiliza diversos filtros Jinja2 para melhorar a apresentação de dados nos templates:
+
+### Filtro Markdown
+Converte texto em formato Markdown para HTML, permitindo formatação avançada.
+```python
+@app.template_filter('markdown')
+def render_markdown(text):
+    if text:
+        return Markup(markdown.markdown(text))
+    return ""
+```
+
+### Filtro nl2br
+Converte quebras de linha (\n) em tags HTML `<br>`, mantendo a formatação de texto com múltiplas linhas.
+```python
+@app.template_filter('nl2br')
+def nl2br(text):
+    if text:
+        # Substituir tanto \n quanto literais \\n
+        text = text.replace('\\n', '\n')  # Primeiro, converte \\n para \n
+        return Markup(text.replace('\n', '<br>'))
+    return ""
+```
+
+Este filtro é especialmente importante nas seguintes funcionalidades:
+- Exibição de observações nos planos alimentares
+- Exibição de descrições de refeições
+- Exibição de notas em consultas
+
 ## Manutenção
 
 ### Backups
@@ -210,6 +241,20 @@ Para contribuir com o projeto:
 
 - Equipe de Desenvolvimento Replit
 - Contribuidores diversos via GitHub
+
+## Histórico de Atualizações e Correções
+
+### Versão 1.1 (24/04/2025)
+- **Correção**: Implementado filtro nl2br para processar corretamente quebras de linha nos planos alimentares e consultas
+- **Melhoria**: Adicionado tratamento especial para suportar tanto quebras de linha regulares (`\n`) quanto escapadas (`\\n`)
+- **Correção**: Resolvido problema ao exibir observações com múltiplas linhas em planos alimentares
+- **Documentação**: Atualização da documentação técnica com informações sobre os filtros de template
+
+### Versão 1.0 (20/03/2025)
+- Lançamento inicial do sistema
+- Implementação completa do CRUD de pacientes, medidas, planos alimentares e consultas
+- Integração com a tabela TACO para informações nutricionais
+- Implementação da autenticação de usuários
 
 ## Licença
 

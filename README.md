@@ -60,10 +60,17 @@ NutriPlan é um sistema web completo desenvolvido para nutricionistas gerenciare
    - Código comentado para facilitar manutenção
    - Módulos reutilizáveis para funcionalidades comuns
 
+## Atualizações Recentes
+
+### Versão 1.1 (24/04/2025)
+- Correção de bug relacionado à exibição de quebras de linha em planos alimentares
+- Implementação de filtros de template para melhor visualização de textos formatados
+- Documentação técnica ampliada com novos detalhes sobre a implementação
+
 ## Tecnologias Utilizadas
 
 - **Backend:**
-  - Python 3.x
+  - Python 3.11
   - Flask (framework web)
   - SQLAlchemy (ORM)
   - SQLite (banco de dados)

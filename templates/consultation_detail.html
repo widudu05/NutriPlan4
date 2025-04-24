@@ -65,6 +65,17 @@
                     <div class="mb-3">
                         <h5 class="font-weight-bold">Objetivo</h5>
                         <p>{{ consultation.objective }}</p>
+                        
+                        <!-- Narrativa visual do objetivo -->
+                        {% if patient.measurements %}
+                        {% set last_measurement = patient.measurements|sort(attribute='date', reverse=True)|first %}
+                        {% set goal_weight = last_measurement.weight * 0.9 if 'perda' in consultation.objective|lower else (last_measurement.weight * 1.1 if 'ganho' in consultation.objective|lower else last_measurement.weight) %}
+                        <div id="goalNarrative" 
+                             data-current="{{ last_measurement.weight }}" 
+                             data-target="{{ goal_weight }}"
+                             data-metric="peso"
+                             data-duration="90"></div>
+                        {% endif %}
                     </div>
                     {% endif %}
                     {% if consultation.notes %}

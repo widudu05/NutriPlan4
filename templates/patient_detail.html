@@ -334,12 +334,26 @@
                     <div class="measurement-grid">
                         <div class="measurement-card main-measurement">
                             <h4>IMC</h4>
-                            <div class="measurement-value">{{ last_measurement.imc|round(1) }}</div>
+                            <div class="measurement-value" data-motivation="imc" data-value="{{ last_measurement.imc|round(1) }}">{{ last_measurement.imc|round(1) }}</div>
                             <div class="measurement-label">{{ last_measurement.imc_classification }}</div>
                         </div>
                         <div class="measurement-card">
                             <h4>Peso</h4>
-                            <div class="measurement-value">{{ last_measurement.weight }} kg</div>
+                            <div class="measurement-value" data-motivation="peso" data-value="{{ last_measurement.weight }}">{{ last_measurement.weight }} kg</div>
+                            
+                            {% if patient.measurements|length > 1 %}
+                            {% set prev_measurement = patient.measurements|reject('eq', last_measurement)|sort(attribute='date', reverse=True)|first %}
+                            {% set weight_diff = last_measurement.weight - prev_measurement.weight %}
+                            <div class="measurement-trend">
+                                {% if weight_diff < 0 %}
+                                <span class="trend-down"><i class="fas fa-arrow-down"></i> {{ (weight_diff * -1)|round(1) }} kg</span>
+                                {% elif weight_diff > 0 %}
+                                <span class="trend-up"><i class="fas fa-arrow-up"></i> {{ weight_diff|round(1) }} kg</span>
+                                {% else %}
+                                <span class="trend-stable"><i class="fas fa-equals"></i> Estável</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="measurement-card">
                             <h4>Altura</h4>
@@ -353,6 +367,63 @@
                         </div>
                         {% endif %}
                     </div>
+                    
+                    <!-- Narrativa visual da jornada -->
+                    <div id="progressJourney" data-values="{{ weight_data }}"></div>
+                    
+                    <!-- Timeline visual de progresso -->
+                    {% if patient.measurements|length > 1 %}
+                    <div class="visual-journey-container">
+                        <h3>Jornada de Progresso</h3>
+                        <div class="journey-timeline-visual">
+                            {% set measurements = patient.measurements|sort(attribute='date') %}
+                            {% set first_measurement = measurements|first %}
+                            {% set last_measurement = measurements|last %}
+                            {% set total_days = (last_measurement.date - first_measurement.date).days + 1 %}
+                            
+                            <div class="journey-start">
+                                <div class="date">{{ first_measurement.date.strftime('%d/%m/%Y') }}</div>
+                                <div class="event">Primeira Medição</div>
+                                <div class="value">{{ first_measurement.weight }} kg</div>
+                            </div>
+                            
+                            <div class="journey-track">
+                                <div class="journey-progress-line"></div>
+                                
+                                {% for m in measurements %}
+                                {% if not loop.first and not loop.last %}
+                                {% set position = ((m.date - first_measurement.date).days / total_days * 100)|round %}
+                                {% set prev_measurement = measurements[loop.index0-1] %}
+                                {% set weight_diff = m.weight - prev_measurement.weight %}
+                                
+                                <div class="journey-milestone" style="left: {{ position }}%">
+                                    <div class="milestone-dot {% if weight_diff < 0 %}down{% elif weight_diff > 0 %}up{% else %}stable{% endif %}"></div>
+                                    <div class="milestone-info">
+                                        <div class="milestone-date">{{ m.date.strftime('%d/%m/%Y') }}</div>
+                                        <div class="milestone-value">{{ m.weight }} kg</div>
+                                        <div class="milestone-change {% if weight_diff < 0 %}down{% elif weight_diff > 0 %}up{% else %}stable{% endif %}">
+                                            {% if weight_diff < 0 %}
+                                            <i class="fas fa-arrow-down"></i> {{ (weight_diff * -1)|round(1) }} kg
+                                            {% elif weight_diff > 0 %}
+                                            <i class="fas fa-arrow-up"></i> {{ weight_diff|round(1) }} kg
+                                            {% else %}
+                                            <i class="fas fa-equals"></i> Estável
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="journey-end">
+                                <div class="date">{{ last_measurement.date.strftime('%d/%m/%Y') }}</div>
+                                <div class="event">Última Medição</div>
+                                <div class="value">{{ last_measurement.weight }} kg</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     
                     <!-- Gráficos de Evolução -->
                     <h3>Evolução</h3>

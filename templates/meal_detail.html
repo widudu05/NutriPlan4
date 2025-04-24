@@ -43,35 +43,90 @@
             <div class="nutrition-summary mb-4">
                 <h3>Resumo Nutricional</h3>
                 <div class="row">
-                    <div class="col-md-3">
-                        <div class="nutrient-card">
-                            <div class="nutrient-value calories">{{ meal.calories|round|int }}</div>
-                            <div class="nutrient-label">Calorias</div>
-                            <div class="nutrient-unit">kcal</div>
+                    <div class="col-md-5">
+                        <!-- Gráfico visual dos macronutrientes -->
+                        <div class="macro-visual-container">
+                            <div class="macro-distribution">
+                                {% if meal.calories %}
+                                {% set protein_pct = (meal.proteins * 4 / meal.calories * 100)|round|int if meal.proteins else 0 %}
+                                {% set carbs_pct = (meal.carbs * 4 / meal.calories * 100)|round|int if meal.carbs else 0 %}
+                                {% set fat_pct = (meal.fats * 9 / meal.calories * 100)|round|int if meal.fats else 0 %}
+                                
+                                <div class="macro-bar">
+                                    <div class="macro-segment protein" style="width: {{ protein_pct }}%;" title="Proteínas: {{ protein_pct }}%">
+                                        {% if protein_pct >= 15 %}<span>{{ protein_pct }}%</span>{% endif %}
+                                    </div>
+                                    <div class="macro-segment carbs" style="width: {{ carbs_pct }}%;" title="Carboidratos: {{ carbs_pct }}%">
+                                        {% if carbs_pct >= 15 %}<span>{{ carbs_pct }}%</span>{% endif %}
+                                    </div>
+                                    <div class="macro-segment fat" style="width: {{ fat_pct }}%;" title="Gorduras: {{ fat_pct }}%">
+                                        {% if fat_pct >= 15 %}<span>{{ fat_pct }}%</span>{% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="macro-legend">
+                                    <div class="legend-item">
+                                        <div class="color-box protein"></div>
+                                        <span>Proteínas</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="color-box carbs"></div>
+                                        <span>Carboidratos</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="color-box fat"></div>
+                                        <span>Gorduras</span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center">
+                                    <p class="text-muted">Nenhuma informação de macronutrientes disponível.</p>
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="nutrient-card">
-                            <div class="nutrient-value proteins">{{ meal.proteins|round(1) }}</div>
-                            <div class="nutrient-label">Proteínas</div>
-                            <div class="nutrient-unit">g</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="nutrient-card">
-                            <div class="nutrient-value carbs">{{ meal.carbs|round(1) }}</div>
-                            <div class="nutrient-label">Carboidratos</div>
-                            <div class="nutrient-unit">g</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="nutrient-card">
-                            <div class="nutrient-value fats">{{ meal.fats|round(1) }}</div>
-                            <div class="nutrient-label">Gorduras</div>
-                            <div class="nutrient-unit">g</div>
+                    
+                    <div class="col-md-7">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="nutrient-card">
+                                    <div class="nutrient-value calories">{{ meal.calories|round|int }}</div>
+                                    <div class="nutrient-label">Calorias</div>
+                                    <div class="nutrient-unit">kcal</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="nutrient-card">
+                                    <div class="nutrient-value proteins">{{ meal.proteins|round(1) }}</div>
+                                    <div class="nutrient-label">Proteínas</div>
+                                    <div class="nutrient-unit">g</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="nutrient-card">
+                                    <div class="nutrient-value carbs">{{ meal.carbs|round(1) }}</div>
+                                    <div class="nutrient-label">Carboidratos</div>
+                                    <div class="nutrient-unit">g</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="nutrient-card">
+                                    <div class="nutrient-value fats">{{ meal.fats|round(1) }}</div>
+                                    <div class="nutrient-label">Gorduras</div>
+                                    <div class="nutrient-unit">g</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Narrativa visual da distribuição de macros -->
+                <div id="macroNarrative" 
+                     data-protein="{{ meal.proteins|round(1) }}" 
+                     data-carbs="{{ meal.carbs|round(1) }}" 
+                     data-fat="{{ meal.fats|round(1) }}"
+                     data-meal-type="{{ meal.name|lower }}"></div>
             </div>
             
             <!-- Alimentos na refeição -->

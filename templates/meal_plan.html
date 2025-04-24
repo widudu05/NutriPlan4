@@ -357,6 +357,60 @@
                     {% if patient.gender %} - {{ patient.gender }}{% endif %}
                 </div>
                 
+                {% if not is_new and meal_plan %}
+                <!-- Narrativa visual do plano alimentar -->
+                <h3>Objetivo do Plano</h3>
+                <div class="goal-journey">
+                    <div class="goal-icon">
+                        {% if plan_goal == 'perda de peso' %}
+                        <i class="fas fa-weight"></i>
+                        {% elif plan_goal == 'ganho de massa' %}
+                        <i class="fas fa-dumbbell"></i>
+                        {% elif plan_goal == 'saúde' %}
+                        <i class="fas fa-heartbeat"></i>
+                        {% else %}
+                        <i class="fas fa-balance-scale"></i>
+                        {% endif %}
+                    </div>
+                    <div class="goal-description">
+                        <h4>{{ plan_goal|title }}</h4>
+                        <p>{{ meal_plan.notes|nl2br }}</p>
+                        
+                        {% if last_measurement and plan_goal == 'perda de peso' %}
+                        <div class="journey-metrics">
+                            <div class="journey-metric current">
+                                <span class="metric-value">{{ last_measurement.weight }} kg</span>
+                                <span class="metric-label">Peso Atual</span>
+                            </div>
+                            <div class="journey-arrow">
+                                <i class="fas fa-long-arrow-alt-right"></i>
+                                <span>Meta</span>
+                            </div>
+                            <div class="journey-metric target">
+                                <span class="metric-value">{{ (last_measurement.weight * 0.9)|round(1) }} kg</span>
+                                <span class="metric-label">Peso Alvo</span>
+                            </div>
+                        </div>
+                        {% elif last_measurement and plan_goal == 'ganho de massa' %}
+                        <div class="journey-metrics">
+                            <div class="journey-metric current">
+                                <span class="metric-value">{{ last_measurement.weight }} kg</span>
+                                <span class="metric-label">Peso Atual</span>
+                            </div>
+                            <div class="journey-arrow">
+                                <i class="fas fa-long-arrow-alt-right"></i>
+                                <span>Meta</span>
+                            </div>
+                            <div class="journey-metric target">
+                                <span class="metric-value">{{ (last_measurement.weight * 1.1)|round(1) }} kg</span>
+                                <span class="metric-label">Peso Alvo</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
                 <!-- Calorias e Macronutrientes -->
                 <h3>Calorias e Macronutrientes</h3>
                 <div class="macro-cards">
@@ -384,8 +438,15 @@
                     {% endif %}
                 </div>
                 
-                <!-- Gráfico de macros -->
+                <!-- Narrativa nutricional -->
                 {% if macros %}
+                <div id="nutritionalStory" 
+                     data-protein="{{ macros.protein }}" 
+                     data-carbs="{{ macros.carbs }}" 
+                     data-fat="{{ macros.fat }}"
+                     data-goal="{{ meal_plan.title|lower }}"></div>
+                
+                <!-- Gráfico de macros -->
                 <div class="chart-container" style="height: 250px;">
                     <canvas id="macrosChart" 
                             data-protein="{{ macros.protein }}" 

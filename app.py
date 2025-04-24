@@ -21,6 +21,15 @@ def create_app(config_class=Config):
         if text:
             return Markup(markdown.markdown(text))
         return ""
+        
+    # Filtro para converter quebras de linha em <br>
+    @app.template_filter('nl2br')
+    def nl2br(text):
+        if text:
+            # Substituir tanto \n quanto literais \\n
+            text = text.replace('\\n', '\n')  # Primeiro, converte \\n para \n
+            return Markup(text.replace('\n', '<br>'))
+        return ""
     
     # Registro de blueprints
     app.register_blueprint(auth)

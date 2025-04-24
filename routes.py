@@ -198,10 +198,28 @@ def patient_detail(patient_id):
         (MealPlan.end_date >= today) | (MealPlan.end_date == None)
     ).order_by(desc(MealPlan.start_date)).first()
     
-    # Obter histórico de medições para gráficos
+    # Obter histórico de medições para gráficos e storytelling
     measurements = Measurement.query.filter_by(patient_id=patient_id).order_by(Measurement.date).all()
-    weight_data = [{'date': m.date.strftime('%d/%m/%Y'), 'value': m.weight} for m in measurements]
-    imc_data = [{'date': m.date.strftime('%d/%m/%Y'), 'value': m.imc} for m in measurements if m.imc]
+    
+    # Preparar dados de peso com métricas adicionais para storytelling
+    weight_data = []
+    for m in measurements:
+        weight_data.append({
+            'date': m.date.strftime('%d/%m/%Y'), 
+            'value': m.weight,
+            'metric': 'peso'
+        })
+    
+    # Preparar dados de IMC com classificação para storytelling
+    imc_data = []
+    for m in measurements:
+        if m.imc:
+            imc_data.append({
+                'date': m.date.strftime('%d/%m/%Y'), 
+                'value': m.imc,
+                'metric': 'imc',
+                'classification': m.imc_classification
+            })
     
     return render_template('patient_detail.html', 
                           patient=patient, 
@@ -332,6 +350,9 @@ def add_meal_plan(patient_id):
         total_calories = request.form.get('total_calories')
         notes = request.form.get('notes', '')
         
+        # Debugging
+        print(f"DEBUG - Notas recebidas: '{notes}'")
+        
         # Validações
         if not title or not start_date_str or not total_calories:
             flash('Título, data de início e calorias totais são obrigatórios.', 'danger')
@@ -387,17 +408,36 @@ def meal_plan_detail(plan_id):
         flash('Você não tem permissão para acessar este plano alimentar.', 'danger')
         return redirect(url_for('patient.patients_list'))
     
+    # Debugging: Verificar observações
+    print(f"DEBUG - Notas no plano alimentar {plan_id}: '{meal_plan.notes}'")
+    
     # Obter refeições do plano
     meals = Meal.query.filter_by(meal_plan_id=plan_id).order_by(Meal.id).all()
     
     # Calcular macros baseado nas calorias do plano
     macros = calculate_macros(meal_plan.total_calories) if meal_plan.total_calories else None
     
+    # Obter última medição para dados de storytelling
+    last_measurement = Measurement.query.filter_by(patient_id=patient.id).order_by(desc(Measurement.date)).first()
+    
+    # Determinar objetivo do plano com base no título
+    plan_goal = 'manutenção'
+    if meal_plan.title:
+        title_lower = meal_plan.title.lower()
+        if 'perda' in title_lower or 'emagrecimento' in title_lower:
+            plan_goal = 'perda de peso'
+        elif 'ganho' in title_lower or 'massa' in title_lower:
+            plan_goal = 'ganho de massa'
+        elif 'saúde' in title_lower or 'saude' in title_lower:
+            plan_goal = 'saúde'
+    
     return render_template('meal_plan.html', 
                           patient=patient, 
                           meal_plan=meal_plan,
                           meals=meals,
                           macros=macros,
+                          last_measurement=last_measurement,
+                          plan_goal=plan_goal,
                           is_new=False)
 
 @meal_bp.route('/meal-plan/<int:plan_id>/add-meal', methods=['POST'])
