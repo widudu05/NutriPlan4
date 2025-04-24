@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriPlan 2.0 - Planejador de Refeições</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NutriPlan 2.0</h1>
+            <p class="subtitle">Seu planejador de refeições saudáveis</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="dashboard-item">
+                <h3><i class="fas fa-calendar-alt"></i> Planos Ativos</h3>
+                <p class="dashboard-value" id="activePlans">0</p>
+            </div>
+            <div class="dashboard-item">
+                <h3><i class="fas fa-apple-alt"></i> Refeições Planejadas</h3>
+                <p class="dashboard-value" id="plannedMeals">0</p>
+            </div>
+            <div class="dashboard-item">
+                <h3><i class="fas fa-fire"></i> Calorias Médias</h3>
+                <p class="dashboard-value" id="avgCalories">0</p>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="create-plan">Criar Plano</button>
+            <button class="tab-btn" data-tab="my-plans">Meus Planos</button>
+            <button class="tab-btn" data-tab="nutrition-info">Informações Nutricionais</button>
+        </div>
+
+        <div class="tab-content">
+            <div class="tab-pane active" id="create-plan">
+                <h2>Criar Novo Plano de Refeições</h2>
+                
+                <form id="meal-plan-form">
+                    <div class="form-group">
+                        <label for="plan-name">Nome do Plano:</label>
+                        <input type="text" id="plan-name" required placeholder="Ex: Plano Semanal">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="plan-description">Descrição:</label>
+                        <textarea id="plan-description" placeholder="Descrição do seu plano de refeições"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="plan-duration">Duração (dias):</label>
+                        <input type="number" id="plan-duration" min="1" max="30" value="7" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dietary-preference">Preferência Alimentar:</label>
+                        <select id="dietary-preference">
+                            <option value="regular">Regular</option>
+                            <option value="vegetarian">Vegetariano</option>
+                            <option value="vegan">Vegano</option>
+                            <option value="keto">Cetogênico</option>
+                            <option value="paleo">Paleolítico</option>
+                            <option value="gluten-free">Sem Glúten</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="calorie-target">Meta de Calorias (por dia):</label>
+                        <input type="number" id="calorie-target" min="500" max="5000" step="100" value="2000">
+                    </div>
+                    
+                    <h3>Configurar Refeições</h3>
+                    <div id="meals-container">
+                        <!-- As refeições serão adicionadas aqui dinamicamente -->
+                    </div>
+                    
+                    <button type="button" id="add-meal" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i> Adicionar Refeição
+                    </button>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Salvar Plano</button>
+                        <button type="reset" class="btn btn-danger">Limpar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="tab-pane" id="my-plans">
+                <h2>Meus Planos de Refeições</h2>
+                <div class="search-container">
+                    <input type="text" id="search-plans" placeholder="Buscar planos...">
+                    <select id="filter-plans">
+                        <option value="all">Todos</option>
+                        <option value="vegetarian">Vegetarianos</option>
+                        <option value="vegan">Veganos</option>
+                        <option value="keto">Cetogênicos</option>
+                        <option value="paleo">Paleolíticos</option>
+                        <option value="gluten-free">Sem Glúten</option>
+                    </select>
+                    <button id="search-btn" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <div id="plans-container" class="plans-grid">
+                    <div class="empty-state" id="no-plans">
+                        <i class="fas fa-clipboard-list empty-icon"></i>
+                        <p>Você ainda não tem planos de refeições.</p>
+                        <p>Crie seu primeiro plano na aba "Criar Plano".</p>
+                    </div>
+                    <!-- Os planos serão adicionados aqui dinamicamente -->
+                </div>
+            </div>
+            
+            <div class="tab-pane" id="nutrition-info">
+                <h2>Informações Nutricionais</h2>
+                
+                <div class="info-cards">
+                    <div class="info-card">
+                        <h3><i class="fas fa-info-circle"></i> Calorias</h3>
+                        <p>As calorias são unidades de energia. Diferentes pessoas precisam de diferentes quantidades de calorias por dia, dependendo de idade, sexo, tamanho e nível de atividade.</p>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h3><i class="fas fa-bread-slice"></i> Carboidratos</h3>
+                        <p>Carboidratos são a principal fonte de energia do corpo. Eles são encontrados em alimentos como pães, cereais, frutas, legumes, leite e iogurte.</p>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h3><i class="fas fa-drumstick-bite"></i> Proteínas</h3>
+                        <p>Proteínas são essenciais para o crescimento e reparação dos tecidos corporais. Elas são encontradas em carnes, peixes, ovos, laticínios, nozes e leguminosas.</p>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h3><i class="fas fa-oil-can"></i> Gorduras</h3>
+                        <p>Gorduras são uma fonte concentrada de energia e ajudam na absorção de vitaminas. Gorduras saudáveis são encontradas em azeite, abacate, nozes e peixes.</p>
+                    </div>
+                </div>
+                
+                <div class="nutrition-guidelines">
+                    <h3>Diretrizes Nutricionais Gerais</h3>
+                    <ul>
+                        <li>Coma uma variedade de alimentos.</li>
+                        <li>Mantenha um peso saudável.</li>
+                        <li>Escolha uma dieta baixa em gordura, gordura saturada e colesterol.</li>
+                        <li>Escolha uma dieta com muitos grãos, vegetais e frutas.</li>
+                        <li>Use açúcar com moderação.</li>
+                        <li>Use sal e sódio com moderação.</li>
+                        <li>Se beber álcool, faça-o com moderação.</li>
+                    </ul>
+                </div>
+                
+                <div class="nutrition-calculator">
+                    <h3>Calculadora de Necessidades Calóricas</h3>
+                    <form id="calorie-calculator">
+                        <div class="form-group">
+                            <label for="gender">Sexo:</label>
+                            <select id="gender" required>
+                                <option value="male">Masculino</option>
+                                <option value="female">Feminino</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="age">Idade:</label>
+                            <input type="number" id="age" min="1" max="120" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="weight">Peso (kg):</label>
+                            <input type="number" id="weight" min="30" max="300" step="0.1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="height">Altura (cm):</label>
+                            <input type="number" id="height" min="100" max="250" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="activity-level">Nível de Atividade:</label>
+                            <select id="activity-level" required>
+                                <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
+                                <option value="1.375">Levemente ativo (exercício leve 1-3 dias/semana)</option>
+                                <option value="1.55">Moderadamente ativo (exercício moderado 3-5 dias/semana)</option>
+                                <option value="1.725">Muito ativo (exercício intenso 6-7 dias/semana)</option>
+                                <option value="1.9">Extremamente ativo (exercício muito intenso, trabalho físico)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="goal">Objetivo:</label>
+                            <select id="goal" required>
+                                <option value="maintain">Manter peso</option>
+                                <option value="lose">Perder peso</option>
+                                <option value="gain">Ganhar peso</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Calcular</button>
+                    </form>
+                    
+                    <div id="calorie-result" class="hidden">
+                        <h4>Resultado:</h4>
+                        <p>Sua taxa metabólica basal (TMB) é: <span id="bmr-value">0</span> calorias/dia</p>
+                        <p>Suas necessidades calóricas diárias são: <span id="tdee-value">0</span> calorias/dia</p>
+                        <p>Para atingir seu objetivo, você deve consumir: <span id="target-calories">0</span> calorias/dia</p>
+                        
+                        <div class="macros-distribution">
+                            <h4>Distribuição de Macronutrientes Recomendada:</h4>
+                            <div class="macros-container">
+                                <div class="macro-item">
+                                    <div class="macro-circle" style="--percentage: 45; --color: #4CAF50;">45%</div>
+                                    <p>Carboidratos</p>
+                                    <p id="carbs-grams">0g</p>
+                                </div>
+                                <div class="macro-item">
+                                    <div class="macro-circle" style="--percentage: 30; --color: #2196F3;">30%</div>
+                                    <p>Proteínas</p>
+                                    <p id="protein-grams">0g</p>
+                                </div>
+                                <div class="macro-item">
+                                    <div class="macro-circle" style="--percentage: 25; --color: #FFC107;">25%</div>
+                                    <p>Gorduras</p>
+                                    <p id="fat-grams">0g</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para visualização de detalhes do plano -->
+    <div id="plan-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-plan-title">Detalhes do Plano</h2>
+            <div id="modal-plan-details">
+                <!-- Detalhes do plano serão preenchidos dinamicamente -->
+            </div>
+            <div class="modal-actions">
+                <button id="edit-plan" class="btn btn-secondary">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button id="delete-plan" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i> Excluir
+                </button>
+                <button id="print-plan" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para edição de refeição -->
+    <div id="meal-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-meal-title">Editar Refeição</h2>
+            <form id="meal-edit-form">
+                <div class="form-group">
+                    <label for="meal-name">Nome da Refeição:</label>
+                    <input type="text" id="meal-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="meal-time">Horário:</label>
+                    <input type="time" id="meal-time" required>
+                </div>
+                
+                <h3>Alimentos</h3>
+                <div id="foods-container">
+                    <!-- Os alimentos serão adicionados aqui dinamicamente -->
+                </div>
+                
+                <button type="button" id="add-food" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Adicionar Alimento
+                </button>
+                
+                <div class="meal-summary">
+                    <p>Total de Calorias: <span id="total-calories">0</span></p>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Salvar Refeição</button>
+                    <button type="button" id="cancel-meal" class="btn btn-danger">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notificações -->
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <i id="notification-icon" class="fas fa-check-circle"></i>
+            <p id="notification-message">Operação realizada com sucesso!</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2023 NutriPlan 2.0 | Desenvolvido para uma vida mais saudável</p>
+        <div class="social-links">
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+        </div>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>

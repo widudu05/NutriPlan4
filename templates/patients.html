@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pacientes - NutriPlan</title>
+    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- CSS adicional para tabela responsiva -->
+    <style>
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+        }
+        .search-bar button {
+            margin-left: 10px;
+        }
+        .patient-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-active {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+        .status-inactive {
+            background-color: rgba(158, 158, 158, 0.1);
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .patient-actions {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .patient-actions .btn {
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header class="header">
+        <a href="{{ url_for('main.index') }}" class="logo">Nutri<span>Plan</span></a>
+        <nav>
+            <button class="menu-toggle" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('main.index') }}" class="nav-link">Início</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('patient.patients_list') }}" class="nav-link active">Pacientes</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">Sair</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="container">
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Pacientes</h2>
+                <a href="{{ url_for('patient.add_patient') }}" class="btn">
+                    <i class="fas fa-plus"></i> Novo Paciente
+                </a>
+            </div>
+            <div class="card-content">
+                <!-- Barra de pesquisa -->
+                <div class="search-bar">
+                    <input type="text" id="patientSearch" placeholder="Buscar paciente..." onkeyup="searchPatients()">
+                    <button class="btn btn-sm" onclick="clearSearch()">
+                        <i class="fas fa-times"></i> Limpar
+                    </button>
+                </div>
+                
+                {% if patients %}
+                <div class="table-responsive">
+                    <table class="table" id="patientsTable">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Telefone</th>
+                                <th>Idade</th>
+                                <th>Gênero</th>
+                                <th>Última Medição</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in patients %}
+                            <tr>
+                                <td>{{ patient.name }}</td>
+                                <td>{{ patient.email or '-' }}</td>
+                                <td>{{ patient.phone or '-' }}</td>
+                                <td>{{ patient.age or '-' }}</td>
+                                <td>{{ patient.gender or '-' }}</td>
+                                <td>
+                                    {% set last_measurement = patient.measurements|sort(attribute='date', reverse=True)|first %}
+                                    {% if last_measurement %}
+                                        {{ last_measurement.date.strftime('%d/%m/%Y') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="patient-actions">
+                                    <a href="{{ url_for('patient.patient_detail', patient_id=patient.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                    <a href="{{ url_for('patient.edit_patient', patient_id=patient.id) }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" onclick="confirmPatientDelete({{ patient.id }}, '{{ patient.name }}')">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Formulário oculto para exclusão -->
+                <form id="deletePatientForm" method="POST" style="display: none;">
+                    <input type="hidden" name="patient_id" id="patientIdToDelete">
+                </form>
+                
+                {% else %}
+                <div class="text-center p-2">
+                    <p>Nenhum paciente cadastrado ainda.</p>
+                    <a href="{{ url_for('patient.add_patient') }}" class="btn mt-2">
+                        <i class="fas fa-plus"></i> Cadastrar Paciente
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 NutriPlan - Sistema para Nutricionistas. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Busca de pacientes
+        function searchPatients() {
+            const input = document.getElementById('patientSearch');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('patientsTable');
+            const tr = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < tr.length; i++) { // começa em 1 para pular o cabeçalho
+                const tdName = tr[i].getElementsByTagName('td')[0]; // Nome
+                const tdEmail = tr[i].getElementsByTagName('td')[1]; // Email
+                const tdPhone = tr[i].getElementsByTagName('td')[2]; // Telefone
+                
+                if (tdName || tdEmail || tdPhone) {
+                    const nameText = tdName.textContent || tdName.innerText;
+                    const emailText = tdEmail.textContent || tdEmail.innerText;
+                    const phoneText = tdPhone.textContent || tdPhone.innerText;
+                    
+                    if (nameText.toUpperCase().indexOf(filter) > -1 || 
+                        emailText.toUpperCase().indexOf(filter) > -1 || 
+                        phoneText.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = '';
+                    } else {
+                        tr[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        function clearSearch() {
+            document.getElementById('patientSearch').value = '';
+            searchPatients();
+        }
+        
+        // Confirmar exclusão de paciente
+        function confirmPatientDelete(patientId, patientName) {
+            if (confirm(`Tem certeza que deseja excluir o paciente ${patientName}? Esta ação não pode ser desfeita.`)) {
+                const form = document.getElementById('deletePatientForm');
+                form.action = `/patient/${patientId}/delete`;
+                form.submit();
+            }
+        }
+
+        // Mostrar/esconder colunas baseado no tamanho da tela
+        function adjustTableForScreenSize() {
+            const table = document.getElementById('patientsTable');
+            if (!table) return;
+            
+            const isMobile = window.innerWidth < 768;
+            const headers = table.querySelectorAll('th');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            // Colunas para esconder em dispositivos móveis (E-mail e Gênero)
+            const columnsToHide = [1, 4]; // índices 0-based
+            
+            if (isMobile) {
+                columnsToHide.forEach(colIndex => {
+                    if (headers[colIndex]) headers[colIndex].style.display = 'none';
+                    
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        if (cells[colIndex]) cells[colIndex].style.display = 'none';
+                    });
+                });
+            } else {
+                columnsToHide.forEach(colIndex => {
+                    if (headers[colIndex]) headers[colIndex].style.display = '';
+                    
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        if (cells[colIndex]) cells[colIndex].style.display = '';
+                    });
+                });
+            }
+        }
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            adjustTableForScreenSize();
+            window.addEventListener('resize', adjustTableForScreenSize);
+        });
+    </script>
+</body>
+</html>

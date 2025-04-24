@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NutriPlan</title>
+    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header class="header">
+        <a href="{{ url_for('main.index') }}" class="logo">Nutri<span>Plan</span></a>
+        <nav>
+            <button class="menu-toggle" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('main.index') }}" class="nav-link">Início</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link active">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('patient.patients_list') }}" class="nav-link">Pacientes</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">Sair</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="container">
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <h1>Dashboard</h1>
+        <p>Bem-vindo, {{ session.username }}!</p>
+        
+        <!-- Estatísticas Gerais -->
+        <div class="row">
+            <div class="col-4">
+                <div class="card stats-card">
+                    <div class="number">{{ total_patients }}</div>
+                    <div class="label">Pacientes Cadastrados</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card stats-card">
+                    <div class="number">{{ recent_patients|length }}</div>
+                    <div class="label">Pacientes Recentes</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card stats-card">
+                    <a href="{{ url_for('patient.add_patient') }}" class="btn" style="margin-top: 10px;">
+                        <i class="fas fa-plus"></i> Novo Paciente
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráficos -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Pacientes Cadastrados por Mês</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="chart-container">
+                            <canvas id="patientsByMonthChart" data-values="{{ patients_by_month }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pacientes Recentes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Pacientes Recentes</h3>
+                    </div>
+                    <div class="card-content">
+                        {% if recent_patients %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>E-mail</th>
+                                    <th>Telefone</th>
+                                    <th>Data de Cadastro</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in recent_patients %}
+                                <tr>
+                                    <td>{{ patient.name }}</td>
+                                    <td>{{ patient.email or '-' }}</td>
+                                    <td>{{ patient.phone or '-' }}</td>
+                                    <td>{{ patient.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('patient.patient_detail', patient_id=patient.id) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-center">Nenhum paciente cadastrado ainda.</p>
+                        {% endif %}
+                        
+                        <div class="text-right mt-2">
+                            <a href="{{ url_for('patient.patients_list') }}" class="btn">Ver Todos os Pacientes</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Links Rápidos -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Links Rápidos</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="row">
+                            <div class="col-4">
+                                <a href="{{ url_for('patient.add_patient') }}" class="btn" style="width: 100%;">
+                                    <i class="fas fa-user-plus"></i> Novo Paciente
+                                </a>
+                            </div>
+                            <div class="col-4">
+                                <a href="{{ url_for('patient.patients_list') }}" class="btn" style="width: 100%;">
+                                    <i class="fas fa-users"></i> Gerenciar Pacientes
+                                </a>
+                            </div>
+                            <div class="col-4">
+                                <a href="{{ url_for('auth.logout') }}" class="btn" style="width: 100%;">
+                                    <i class="fas fa-sign-out-alt"></i> Sair
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 NutriPlan - Sistema para Nutricionistas. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+</body>
+</html>

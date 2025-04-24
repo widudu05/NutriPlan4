@@ -1,0 +1,603 @@
+/* Estilo para o NutriPlan - Sistema para Nutricionistas */
+
+/* Variáveis de cores */
+:root {
+  --primary-color: #4CAF50; /* Verde */
+  --primary-dark: #388E3C;
+  --primary-light: #C8E6C9;
+  --accent-color: #FF5722; /* Laranja */
+  --text-primary: #212121; 
+  --text-secondary: #757575;
+  --divider-color: #BDBDBD;
+  --background-color: #F5F5F5;
+  --white: #FFFFFF;
+  --success: #4CAF50;
+  --info: #03A9F4;
+  --warning: #FFC107;
+  --danger: #F44336;
+}
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--background-color);
+}
+
+/* Cabeçalho */
+.header {
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+  text-decoration: none;
+}
+
+.logo span {
+  color: var(--accent-color);
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+}
+
+.nav-item {
+  margin-left: 20px;
+}
+
+.nav-link {
+  color: var(--white);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.nav-link:hover {
+  background-color: var(--primary-dark);
+}
+
+.nav-link.active {
+  background-color: var(--white);
+  color: var(--primary-color);
+}
+
+/* Container principal */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Cards */
+.card {
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.card-content {
+  margin-bottom: 15px;
+}
+
+/* Botões */
+.btn {
+  display: inline-block;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--primary-color);
+  color: var(--white);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-success {
+  background-color: var(--success);
+}
+
+.btn-info {
+  background-color: var(--info);
+}
+
+.btn-warning {
+  background-color: var(--warning);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+}
+
+/* Formulários */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Alertas */
+.alert {
+  padding: 12px 16px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  border-left: 4px solid transparent;
+}
+
+.alert-success {
+  background-color: #E8F5E9;
+  border-left-color: var(--success);
+  color: #2E7D32;
+}
+
+.alert-info {
+  background-color: #E1F5FE;
+  border-left-color: var(--info);
+  color: #0277BD;
+}
+
+.alert-warning {
+  background-color: #FFF8E1;
+  border-left-color: var(--warning);
+  color: #F57F17;
+}
+
+.alert-danger {
+  background-color: #FFEBEE;
+  border-left-color: var(--danger);
+  color: #C62828;
+}
+
+/* Tabelas */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.table th, .table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.table th {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 500;
+}
+
+.table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Grid */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+
+.col-12, .col-6, .col-4, .col-3 {
+  padding: 0 10px;
+  margin-bottom: 20px;
+}
+
+.col-12 {
+  width: 100%;
+}
+
+.col-6 {
+  width: 50%;
+}
+
+.col-4 {
+  width: 33.33%;
+}
+
+.col-3 {
+  width: 25%;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .col-6, .col-4, .col-3 {
+    width: 100%;
+  }
+  
+  .nav-menu {
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background-color: var(--primary-color);
+    width: 200px;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: none;
+  }
+  
+  .nav-menu.active {
+    display: block;
+  }
+  
+  .nav-item {
+    margin: 0;
+    margin-bottom: 10px;
+  }
+  
+  .menu-toggle {
+    display: block;
+    font-size: 24px;
+    color: var(--white);
+    cursor: pointer;
+  }
+}
+
+/* Dashboard */
+.stats-card {
+  text-align: center;
+  padding: 20px;
+}
+
+.stats-card .number {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 5px;
+}
+
+.stats-card .label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Detalhes do paciente */
+.patient-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.patient-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: var(--primary-color);
+  margin-right: 20px;
+}
+
+.patient-info h2 {
+  margin-bottom: 5px;
+}
+
+.patient-info p {
+  color: var(--text-secondary);
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.tab.active {
+  border-bottom-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Medições */
+.measurement-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.measurement-value {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--primary-color);
+  margin-bottom: 5px;
+}
+
+.measurement-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Login e Registro */
+.auth-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 30px;
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.auth-footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+/* Plano alimentar */
+.meal-card {
+  margin-bottom: 15px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meal-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.meal-description {
+  margin: 10px 0;
+}
+
+.meal-macros {
+  display: flex;
+  font-size: 14px;
+}
+
+.meal-macro {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.meal-macro-value {
+  font-weight: 500;
+  margin-right: 5px;
+}
+
+/* Utilitários */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.mb-2 {
+  margin-bottom: 10px !important;
+}
+
+.mt-2 {
+  margin-top: 10px !important;
+}
+
+.mt-4 {
+  margin-top: 20px !important;
+}
+
+.p-2 {
+  padding: 10px !important;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Gráficos */
+.chart-container {
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+/* Página inicial */
+.hero {
+  background-color: var(--primary-color);
+  color: var(--white);
+  text-align: center;
+  padding: 60px 20px;
+  margin-bottom: 40px;
+}
+
+.hero h1 {
+  font-size: 36px;
+  margin-bottom: 15px;
+}
+
+.hero p {
+  font-size: 18px;
+  margin-bottom: 25px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.feature {
+  width: 300px;
+  margin: 0 15px 30px;
+  text-align: center;
+}
+
+.feature-icon {
+  font-size: 48px;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.feature h3 {
+  margin-bottom: 10px;
+}
+
+footer {
+  background-color: var(--text-primary);
+  color: var(--white);
+  text-align: center;
+  padding: 20px;
+  margin-top: 40px;
+}
+
+/* Menu hambúrguer para mobile */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--white);
+  font-size: 24px;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: var(--primary-dark);
+    flex-direction: column;
+    padding: 10px 0;
+  }
+
+  .nav-menu.active {
+    display: flex;
+  }
+
+  .nav-item {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 10px;
+  }
+
+  .header {
+    position: relative;
+  }
+}

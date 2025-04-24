@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if is_new %}Novo Plano Alimentar{% else %}{{ meal_plan.title }}{% endif %} - NutriPlan</title>
+    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .macro-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .macro-card {
+            border: 1px solid var(--divider-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            background-color: var(--white);
+        }
+        .macro-card.protein {
+            border-left: 3px solid #F44336;
+        }
+        .macro-card.carbs {
+            border-left: 3px solid #FFC107;
+        }
+        .macro-card.fat {
+            border-left: 3px solid #2196F3;
+        }
+        .macro-card h4 {
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+        .macro-value {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .macro-percent {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .meal-item {
+            margin-bottom: 20px;
+            border: 1px solid var(--divider-color);
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+        }
+        .meal-item.breakfast {
+            border-left: 3px solid #4CAF50;
+        }
+        .meal-item.lunch {
+            border-left: 3px solid #FF9800;
+        }
+        .meal-item.dinner {
+            border-left: 3px solid #9C27B0;
+        }
+        .meal-item.snack {
+            border-left: 3px solid #03A9F4;
+        }
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .meal-title {
+            font-weight: 500;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        .meal-time {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-left: 10px;
+        }
+        .meal-description {
+            white-space: pre-line;
+            margin-bottom: 10px;
+        }
+        .meal-macros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 14px;
+        }
+        .meal-macro {
+            display: flex;
+            align-items: center;
+        }
+        .meal-macro-value {
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        .meal-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        #mealForm {
+            margin-top: 20px;
+            border: 1px solid var(--divider-color);
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        .activity-level-info {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .meal-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .meal-actions {
+                position: static;
+                margin-top: 10px;
+            }
+            .macro-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header class="header">
+        <a href="{{ url_for('main.index') }}" class="logo">Nutri<span>Plan</span></a>
+        <nav>
+            <button class="menu-toggle" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('main.index') }}" class="nav-link">Início</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('patient.patients_list') }}" class="nav-link">Pacientes</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">Sair</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="container">
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <div class="card">
+            {% if is_new %}
+            <!-- Formulário de novo plano alimentar -->
+            <div class="card-header">
+                <h2 class="card-title">Novo Plano Alimentar</h2>
+                <a href="{{ url_for('patient.patient_detail', patient_id=patient.id) }}" class="btn btn-info">
+                    <i class="fas fa-arrow-left"></i> Voltar para Paciente
+                </a>
+            </div>
+            <div class="card-content">
+                <!-- Informações do paciente -->
+                <div class="alert alert-info">
+                    <strong>Paciente:</strong> {{ patient.name }}
+                    {% if patient.age %} - {{ patient.age }} anos{% endif %}
+                    {% if patient.gender %} - {{ patient.gender }}{% endif %}
+                </div>
+                
+                <!-- Calcular necessidades energéticas se houver medição -->
+                {% if last_measurement %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Cálculo de Necessidades Energéticas</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="row">
+                            <div class="col-6">
+                                <p><strong>TMB calculada:</strong> {{ last_measurement.tmb|round|int }} kcal/dia</p>
+                                <p><small>Taxa Metabólica Basal, baseada na última medição ({{ last_measurement.date.strftime('%d/%m/%Y') }})</small></p>
+                                
+                                <div class="form-group">
+                                    <label for="activity_level">Nível de Atividade Física:</label>
+                                    <select id="activity_level" class="form-control" onchange="calculateEnergyNeeds()">
+                                        <option value="sedentary">Sedentário (pouca ou nenhuma atividade)</option>
+                                        <option value="light">Leve (exercício 1-3 dias por semana)</option>
+                                        <option value="moderate" selected>Moderado (exercício 3-5 dias por semana)</option>
+                                        <option value="active">Ativo (exercício 6-7 dias por semana)</option>
+                                        <option value="very_active">Muito Ativo (exercício intenso diário)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="energy_needs">Necessidades Energéticas:</label>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <input type="number" id="energy_needs" class="form-control" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-info" onclick="useCalculatedCalories()">
+                                                <i class="fas fa-calculator"></i> Usar este valor
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label>Objetivo:</label>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm" onclick="adjustCalories(0.8)" title="Redução de 20% nas calorias">
+                                            <i class="fas fa-weight"></i> Perda de peso
+                                        </button>
+                                        <button type="button" class="btn btn-sm" onclick="adjustCalories(1.0)" title="Manutenção de peso">
+                                            <i class="fas fa-balance-scale"></i> Manutenção
+                                        </button>
+                                        <button type="button" class="btn btn-sm" onclick="adjustCalories(1.2)" title="Aumento de 20% nas calorias">
+                                            <i class="fas fa-dumbbell"></i> Ganho de massa
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mt-4">
+                                    <label>Distribuição de Macronutrientes:</label>
+                                    <div class="row mt-2">
+                                        <div class="col-4">
+                                            <label for="protein_pct">Proteínas:</label>
+                                            <div class="input-group">
+                                                <input type="number" id="protein_pct" class="form-control" value="25" min="10" max="40" step="5">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <label for="fat_pct">Gorduras:</label>
+                                            <div class="input-group">
+                                                <input type="number" id="fat_pct" class="form-control" value="25" min="10" max="40" step="5">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <label for="carbs_pct">Carboidratos:</label>
+                                            <div class="input-group">
+                                                <input type="number" id="carbs_pct" class="form-control" value="50" readonly>
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Formulário do Plano Alimentar -->
+                <form method="POST" action="{{ url_for('meal.add_meal_plan', patient_id=patient.id) }}" class="needs-validation" id="mealPlanForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title" class="form-label">Título do Plano*</label>
+                            <input type="text" id="title" name="title" class="form-control" required placeholder="Ex: Plano de Emagrecimento">
+                            <div class="invalid-feedback">Título é obrigatório</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="total_calories" class="form-label">Calorias Totais Diárias*</label>
+                            <input type="number" id="total_calories" name="total_calories" class="form-control" min="1000" step="50" required>
+                            <div class="invalid-feedback">Calorias são obrigatórias</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start_date" class="form-label">Data de Início*</label>
+                            <input type="date" id="start_date" name="start_date" class="form-control" required>
+                            <div class="invalid-feedback">Data de início é obrigatória</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="end_date" class="form-label">Data de Término (opcional)</label>
+                            <input type="date" id="end_date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Observações</label>
+                        <textarea id="notes" name="notes" class="form-control" rows="4" placeholder="Observações gerais sobre o plano alimentar, restrições, etc."></textarea>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn">
+                            <i class="fas fa-save"></i> Criar Plano Alimentar
+                        </button>
+                        <a href="{{ url_for('patient.patient_detail', patient_id=patient.id) }}" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+            {% else %}
+            <!-- Detalhes do plano alimentar -->
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">{{ meal_plan.title }}</h2>
+                    <p>
+                        <strong>Período:</strong> {{ meal_plan.start_date.strftime('%d/%m/%Y') }}
+                        {% if meal_plan.end_date %}
+                          até {{ meal_plan.end_date.strftime('%d/%m/%Y') }}
+                        {% else %}
+                          (sem data final)
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('patient.patient_detail', patient_id=patient.id) }}" class="btn btn-info">
+                        <i class="fas fa-arrow-left"></i> Voltar para Paciente
+                    </a>
+                    <button class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> Excluir Plano
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-content">
+                <!-- Informações do paciente -->
+                <div class="alert alert-info">
+                    <strong>Paciente:</strong> {{ patient.name }}
+                    {% if patient.age %} - {{ patient.age }} anos{% endif %}
+                    {% if patient.gender %} - {{ patient.gender }}{% endif %}
+                </div>
+                
+                <!-- Calorias e Macronutrientes -->
+                <h3>Calorias e Macronutrientes</h3>
+                <div class="macro-cards">
+                    <div class="macro-card">
+                        <h4>Calorias Totais</h4>
+                        <div class="macro-value">{{ meal_plan.total_calories }} kcal</div>
+                        <div class="macro-percent">por dia</div>
+                    </div>
+                    {% if macros %}
+                    <div class="macro-card protein">
+                        <h4>Proteínas</h4>
+                        <div class="macro-value">{{ macros.protein }} g</div>
+                        <div class="macro-percent">{{ (macros.protein * 4 / meal_plan.total_calories * 100)|round|int }}% das calorias</div>
+                    </div>
+                    <div class="macro-card carbs">
+                        <h4>Carboidratos</h4>
+                        <div class="macro-value">{{ macros.carbs }} g</div>
+                        <div class="macro-percent">{{ (macros.carbs * 4 / meal_plan.total_calories * 100)|round|int }}% das calorias</div>
+                    </div>
+                    <div class="macro-card fat">
+                        <h4>Gorduras</h4>
+                        <div class="macro-value">{{ macros.fat }} g</div>
+                        <div class="macro-percent">{{ (macros.fat * 9 / meal_plan.total_calories * 100)|round|int }}% das calorias</div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Gráfico de macros -->
+                {% if macros %}
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="macrosChart" 
+                            data-protein="{{ macros.protein }}" 
+                            data-carbs="{{ macros.carbs }}" 
+                            data-fat="{{ macros.fat }}"></canvas>
+                </div>
+                {% endif %}
+                
+                <!-- Observações -->
+                {% if meal_plan.notes %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Observações</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>{{ meal_plan.notes|nl2br }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Refeições -->
+                <div class="card-header">
+                    <h3>Refeições</h3>
+                    <button class="btn" onclick="showMealForm()">
+                        <i class="fas fa-plus"></i> Adicionar Refeição
+                    </button>
+                </div>
+                
+                <!-- Formulário de Refeição (oculto inicialmente) -->
+                <div id="mealForm" style="display: none;">
+                    <form method="POST" action="{{ url_for('meal.add_meal', plan_id=meal_plan.id) }}" class="needs-validation">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name" class="form-label">Nome da Refeição*</label>
+                                <select id="name" name="name" class="form-control" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Café da Manhã">Café da Manhã</option>
+                                    <option value="Lanche da Manhã">Lanche da Manhã</option>
+                                    <option value="Almoço">Almoço</option>
+                                    <option value="Lanche da Tarde">Lanche da Tarde</option>
+                                    <option value="Jantar">Jantar</option>
+                                    <option value="Ceia">Ceia</option>
+                                    <option value="Pré-treino">Pré-treino</option>
+                                    <option value="Pós-treino">Pós-treino</option>
+                                </select>
+                                <div class="invalid-feedback">Nome da refeição é obrigatório</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="time" class="form-label">Horário Sugerido</label>
+                                <input type="time" id="time" name="time" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description" class="form-label">Descrição da Refeição*</label>
+                            <textarea id="description" name="description" class="form-control" rows="6" required
+                                placeholder="Descreva os alimentos e quantidades para esta refeição.
+Ex:
+- 2 fatias de pão integral
+- 1 ovo cozido
+- 1 colher de sopa de requeijão light
+- 1 xícara de chá verde"></textarea>
+                            <div class="invalid-feedback">Descrição da refeição é obrigatória</div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="calories" class="form-label">Calorias (kcal)</label>
+                                <input type="number" id="calories" name="calories" class="form-control" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="proteins" class="form-label">Proteínas (g)</label>
+                                <input type="number" id="proteins" name="proteins" class="form-control" min="0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="carbs" class="form-label">Carboidratos (g)</label>
+                                <input type="number" id="carbs" name="carbs" class="form-control" min="0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="fats" class="form-label">Gorduras (g)</label>
+                                <input type="number" id="fats" name="fats" class="form-control" min="0" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="btn">
+                                <i class="fas fa-save"></i> Adicionar Refeição
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="hideMealForm()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Lista de Refeições -->
+                {% if meals %}
+                <div class="meal-list">
+                    {% for meal in meals %}
+                    <div class="meal-item 
+                        {% if 'café' in meal.name.lower() %}breakfast
+                        {% elif 'almoço' in meal.name.lower() %}lunch
+                        {% elif 'jantar' in meal.name.lower() %}dinner
+                        {% else %}snack{% endif %}">
+                        <div class="meal-header">
+                            <div class="meal-title">
+                                {{ meal.name }}
+                                {% if meal.time %}
+                                <div class="meal-time">{{ meal.time }}</div>
+                                {% endif %}
+                            </div>
+                            {% if meal.calories %}
+                            <div>{{ meal.calories }} kcal</div>
+                            {% endif %}
+                        </div>
+                        <div class="meal-description">{{ meal.description }}</div>
+                        {% if meal.proteins or meal.carbs or meal.fats %}
+                        <div class="meal-macros">
+                            {% if meal.proteins %}
+                            <div class="meal-macro">
+                                <div class="meal-macro-value">{{ meal.proteins }}g</div>
+                                <div>Proteínas</div>
+                            </div>
+                            {% endif %}
+                            {% if meal.carbs %}
+                            <div class="meal-macro">
+                                <div class="meal-macro-value">{{ meal.carbs }}g</div>
+                                <div>Carboidratos</div>
+                            </div>
+                            {% endif %}
+                            {% if meal.fats %}
+                            <div class="meal-macro">
+                                <div class="meal-macro-value">{{ meal.fats }}g</div>
+                                <div>Gorduras</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="meal-actions">
+                            <button class="btn btn-sm btn-danger" onclick="confirmMealDelete({{ meal.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Formulário para exclusão de refeição -->
+                <form id="deleteMealForm" method="POST" style="display: none;">
+                    <input type="hidden" name="meal_id" id="mealIdToDelete">
+                </form>
+                {% else %}
+                <div class="alert alert-info text-center">
+                    Nenhuma refeição adicionada ainda. Clique no botão acima para adicionar refeições ao plano.
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Formulário para exclusão do plano -->
+            <form id="deleteMealPlanForm" method="POST" action="{{ url_for('meal.delete_meal_plan', plan_id=meal_plan.id) }}" style="display: none;"></form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 NutriPlan - Sistema para Nutricionistas. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    
+    <script>
+        {% if is_new %}
+        // Cálculo de necessidades energéticas
+        function calculateEnergyNeeds() {
+            {% if last_measurement %}
+            const tmb = {{ last_measurement.tmb|round|int }};
+            const activityLevel = document.getElementById('activity_level').value;
+            
+            // Fazer a solicitação para a API
+            fetch('/api/energy-needs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tmb: tmb,
+                    activity_level: activityLevel
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.energy_needs) {
+                    document.getElementById('energy_needs').value = data.energy_needs;
+                }
+            })
+            .catch(error => {
+                console.error('Error calculating energy needs:', error);
+            });
+            {% endif %}
+        }
+        
+        function useCalculatedCalories() {
+            const energyNeeds = document.getElementById('energy_needs').value;
+            if (energyNeeds) {
+                document.getElementById('total_calories').value = energyNeeds;
+            }
+        }
+        
+        function adjustCalories(factor) {
+            const energyNeeds = document.getElementById('energy_needs').value;
+            if (energyNeeds) {
+                const adjusted = Math.round(energyNeeds * factor);
+                document.getElementById('total_calories').value = adjusted;
+            }
+        }
+        
+        // Atualizar percentual de carboidratos automaticamente
+        document.addEventListener('DOMContentLoaded', function() {
+            const proteinPct = document.getElementById('protein_pct');
+            const fatPct = document.getElementById('fat_pct');
+            const carbsPct = document.getElementById('carbs_pct');
+            
+            if (proteinPct && fatPct && carbsPct) {
+                const updateCarbsPct = function() {
+                    const protein = parseInt(proteinPct.value) || 0;
+                    const fat = parseInt(fatPct.value) || 0;
+                    const carbs = 100 - protein - fat;
+                    
+                    // Limitar entre 0 e 100
+                    carbsPct.value = Math.max(0, Math.min(100, carbs));
+                    
+                    // Validar se a soma é 100
+                    if (protein + fat > 100) {
+                        alert('A soma das porcentagens de proteínas e gorduras não pode exceder 100%');
+                    }
+                };
+                
+                proteinPct.addEventListener('input', updateCarbsPct);
+                fatPct.addEventListener('input', updateCarbsPct);
+                
+                // Calcular necessidades iniciais
+                calculateEnergyNeeds();
+            }
+            
+            // Definir data de hoje como padrão
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            document.getElementById('start_date').value = dateString;
+        });
+        {% else %}
+        // Mostrar/esconder formulário de refeição
+        function showMealForm() {
+            document.getElementById('mealForm').style.display = 'block';
+            document.getElementById('name').focus();
+        }
+        
+        function hideMealForm() {
+            document.getElementById('mealForm').style.display = 'none';
+        }
+        
+        // Confirmar exclusões
+        function confirmDelete() {
+            if (confirm('Tem certeza que deseja excluir este plano alimentar? Esta ação não pode ser desfeita.')) {
+                document.getElementById('deleteMealPlanForm').submit();
+            }
+        }
+        
+        function confirmMealDelete(mealId) {
+            if (confirm('Tem certeza que deseja excluir esta refeição? Esta ação não pode ser desfeita.')) {
+                const form = document.getElementById('deleteMealForm');
+                form.action = `/meal/${mealId}/delete`;
+                form.submit();
+            }
+        }
+        {% endif %}
+    </script>
+</body>
+</html>

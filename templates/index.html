@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriPlan - Sistema para Nutricionistas</title>
+    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header class="header">
+        <a href="{{ url_for('main.index') }}" class="logo">Nutri<span>Plan</span></a>
+        <nav>
+            <button class="menu-toggle" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('main.index') }}" class="nav-link active">Início</a>
+                </li>
+                {% if 'user_id' in session %}
+                <li class="nav-item">
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('patient.patients_list') }}" class="nav-link">Pacientes</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">Sair</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a href="#login-section" class="nav-link">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.register') }}" class="nav-link">Cadastre-se</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="container">
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% if 'user_id' not in session %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Gerenciamento nutricional completo e eficiente</h1>
+            <p>O NutriPlan é o software ideal para nutricionistas que desejam otimizar seu atendimento, gerenciar pacientes e criar planos alimentares personalizados com facilidade.</p>
+            <a href="#login-section" class="btn">Começar agora</a>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="container">
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Gestão de Pacientes</h3>
+                <p>Cadastre e gerencie todos os seus pacientes em um só lugar, mantendo histórico completo de atendimentos e evolução.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-weight"></i>
+                </div>
+                <h3>Avaliações Antropométricas</h3>
+                <p>Registre medidas antropométricas e acompanhe a evolução do paciente com gráficos e relatórios detalhados.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <h3>Planos Alimentares</h3>
+                <p>Crie planos alimentares personalizados com cálculos automáticos de calorias e distribuição de macronutrientes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Section -->
+    <section id="login-section" class="container">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <h2>Nutri<span>Plan</span></h2>
+            </div>
+            <h3 class="auth-title">Acesse sua conta</h3>
+            
+            <form method="POST" action="{{ url_for('auth.login') }}" class="needs-validation">
+                <div class="form-group">
+                    <label for="username" class="form-label">Usuário</label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                    <div class="invalid-feedback">Por favor, informe seu usuário.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Senha</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                    <div class="invalid-feedback">Por favor, informe sua senha.</div>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn" style="width: 100%;">Entrar</button>
+                </div>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Não tem uma conta? <a href="{{ url_for('auth.register') }}">Cadastre-se</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 NutriPlan - Sistema para Nutricionistas. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+    {% else %}
+    <script>
+        window.location.href = "{{ url_for('main.dashboard') }}";
+    </script>
+    {% endif %}
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
+</body>
+</html>
