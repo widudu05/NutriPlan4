@@ -360,7 +360,12 @@ def add_meal_plan(patient_id):
         db.session.commit()
         
         flash('Plano alimentar criado com sucesso!', 'success')
-        return redirect(url_for('meal.meal_plan_detail', plan_id=meal_plan.id))
+        
+        # Verificar se a requisição foi feita via AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'redirect': url_for('meal.meal_plan_detail', plan_id=meal_plan.id)})
+        else:
+            return redirect(url_for('meal.meal_plan_detail', plan_id=meal_plan.id))
     
     # Obter última medição para cálculos
     last_measurement = Measurement.query.filter_by(patient_id=patient_id).order_by(desc(Measurement.date)).first()

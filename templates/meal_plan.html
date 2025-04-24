@@ -284,7 +284,7 @@
                 {% endif %}
                 
                 <!-- Formulário do Plano Alimentar -->
-                <form method="POST" action="{{ url_for('meal.add_meal_plan', patient_id=patient.id) }}" class="needs-validation" id="mealPlanForm">
+                <form method="POST" action="{{ url_for('meal.add_meal_plan', patient_id=patient.id) }}" class="needs-validation" id="mealPlanForm" onsubmit="return submitMealPlan(event)">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="title" class="form-label">Título do Plano*</label>
@@ -316,7 +316,7 @@
                     </div>
                     
                     <div class="form-group mt-4">
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn" id="submitPlanBtn">
                             <i class="fas fa-save"></i> Criar Plano Alimentar
                         </button>
                         <a href="{{ url_for('patient.patient_detail', patient_id=patient.id) }}" class="btn btn-danger">
@@ -647,6 +647,66 @@ Ex:
             const dateString = today.toISOString().split('T')[0];
             document.getElementById('start_date').value = dateString;
         });
+        
+        // Função para submeter o formulário via AJAX para evitar problemas com submissão padrão
+        function submitMealPlan(event) {
+            // Previne a submissão normal
+            event.preventDefault();
+            
+            // Obter o formulário
+            const form = document.getElementById('mealPlanForm');
+            
+            // Verificar campos obrigatórios
+            const title = document.getElementById('title').value;
+            const startDate = document.getElementById('start_date').value;
+            const totalCalories = document.getElementById('total_calories').value;
+            
+            if (!title || !startDate || !totalCalories) {
+                alert("Por favor, preencha todos os campos obrigatórios: Título, Data de Início e Calorias Totais.");
+                return false;
+            }
+            
+            // Desativar o botão para evitar múltiplos envios
+            const submitBtn = document.getElementById('submitPlanBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            
+            // Preparar dados do formulário
+            const formData = new FormData(form);
+            
+            // Submeter via AJAX
+            fetch('{{ url_for('meal.add_meal_plan', patient_id=patient.id) }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Se for redirecionado, seguir para a nova URL
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Erro ao enviar o formulário');
+                }
+            })
+            .then(data => {
+                if (data && data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert("Ocorreu um erro ao criar o plano alimentar. Tente novamente.");
+                // Reativar o botão em caso de erro
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Criar Plano Alimentar';
+            });
+            
+            return false;
+        }
         {% else %}
         // Mostrar/esconder formulário de refeição
         function showMealForm() {
